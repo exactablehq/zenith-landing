@@ -1,21 +1,18 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
+const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-geist-sans",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
-  title: "Next.js SSG + Tailwind + Framer Motion Template",
+  title: "Unique — Premium Car Rental in New York",
   description:
-    "A production-ready boilerplate to generate SSG static sites with Next.js 16, Tailwind CSS v4, Framer Motion animations, and zero-config deployment to GitHub Pages using GitHub Actions.",
+    "Don't deny yourself the pleasure of driving the best premium cars from around the world here and now. Experience luxury vehicle rental in New York with Unique.",
+  keywords: "car rental, premium cars, luxury car rental New York, Porsche, exotic car rental",
 };
 
 export default function RootLayout({
@@ -24,11 +21,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en" className={`${plusJakartaSans.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col bg-white text-zinc-900 font-sans selection:bg-zinc-900 selection:text-white">
+        {children}
+      </body>
     </html>
   );
 }
