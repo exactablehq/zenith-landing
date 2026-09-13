@@ -27,14 +27,16 @@ jobs:
           node-version: "20"
           cache: "npm"
 
-      - name: Lockfile sync
-        run: npm i
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
       - name: Install dependencies
         run: npm ci
 
       - name: Build static site
         env:
-          NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
+          NEXT_PUBLIC_BASE_PATH: ${{ steps.pages.outputs.base_path || '/zenith-landing' }}
         run: npm run build
 
       - name: Upload artifact
