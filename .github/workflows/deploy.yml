@@ -27,6 +27,8 @@ jobs:
           node-version: "20"
           cache: "npm"
 
+      - name: Lockfile sync
+        run: npm i
       - name: Install dependencies
         run: npm ci
 
