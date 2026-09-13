@@ -1,16 +1,24 @@
 export interface FleetVehicle {
   id: string;
   name: string;
-  category: "cab" | "self-drive" | "both";
+  category: "cabs" | "self-drive" | "both";
   type: string;
-  seats: number;
-  transmission: "Manual" | "Automatic";
-  fuel: "Petrol" | "Diesel" | "CNG" | "EV";
-  cabRate: string;
-  selfDriveRate: string;
+  seats: string;
+  transmission: string;
+  fuel: string;
+  cabRate?: string;
+  selfDriveRate?: string;
+  image: string;
   popularFor: string;
-  features: string[];
   tag?: string;
+  luggage: string;
+  specs: {
+    ac: string;
+    engine: string;
+    securityDeposit?: string;
+    speedLimit?: string;
+    doorstepDelivery: boolean;
+  };
 }
 
 export interface DamanRoute {
@@ -24,16 +32,11 @@ export interface DamanRoute {
   highlight: string;
 }
 
-export interface TrustMetric {
-  value: string;
-  label: string;
-  detail: string;
-}
-
-export interface FaqItem {
-  question: string;
-  answer: string;
-  category: "general" | "cabs" | "self-drive";
+export interface SocialLink {
+  id: string;
+  name: string;
+  url: string;
+  iconName: "linkedin" | "instagram" | "twitter" | "facebook" | "youtube";
 }
 
 export const ZENITH_COMPANY_INFO = {
@@ -50,116 +53,42 @@ export const ZENITH_COMPANY_INFO = {
   operationalAreas: ["Daman", "Vapi", "Silvassa", "Valsad", "Umargam"],
   yearsExperience: "19+",
   foundedYear: "2006",
-  whatsappUrl: "https://wa.me/919979111678?text=Hi%20Zenith%20Fleets%2C%20I%20would%20like%20to%20learn%20more%20about%20your%20services.",
+  careersUrl: "https://exactable.in/careers",
+  exactableUrl: "https://exactable.in",
+  whatsappUrl: "https://wa.me/919979111678?text=Hi%20Zenith%20Fleets%2C%20I%20would%20like%20to%20inquire%20about%20cab%20and%20self-drive%20services%20in%20Daman.",
   driverWhatsappUrl: "https://wa.me/919979111678?text=Hello%20Zenith%20Fleets%2C%20I%20am%20interested%20in%20learning%20more%20about%20the%20Driver%20Fleet%20Partner%20Program%20in%20Daman.",
 };
 
-export const TRUST_METRICS: TrustMetric[] = [
+export const SOCIAL_LINKS: SocialLink[] = [
   {
-    value: "19+",
-    label: "Years in Operation",
-    detail: "Operating reliable mobility at scale since 2006",
+    id: "linkedin",
+    name: "LinkedIn",
+    url: "https://linkedin.com/company/zenithfleets",
+    iconName: "linkedin",
   },
   {
-    value: "250+",
-    label: "Active Fleet Assets",
-    detail: "Company-managed, GPS-tracked, and sanitized vehicles",
+    id: "instagram",
+    name: "Instagram",
+    url: "https://instagram.com/zenithfleets",
+    iconName: "instagram",
   },
   {
-    value: "300+",
-    label: "Mobility Professionals",
-    detail: "Verified chauffeurs, fleet managers, and round-the-clock dispatch",
+    id: "twitter",
+    name: "X (Twitter)",
+    url: "https://x.com/zenithfleets",
+    iconName: "twitter",
   },
   {
-    value: "100%",
-    label: "State Event Record",
-    detail: "Official Fleet Partner for Khelo India Beach Games Diu & G20",
-  },
-];
-
-export const FLEET_VEHICLES: FleetVehicle[] = [
-  {
-    id: "maruti-swift",
-    name: "Maruti Suzuki Swift",
-    category: "both",
-    type: "Smart Hatchback",
-    seats: 4,
-    transmission: "Manual",
-    fuel: "Petrol",
-    cabRate: "₹14/km",
-    selfDriveRate: "₹1,199/day",
-    popularFor: "Quick hops across Daman town, markets & beach hopping",
-    features: ["Chilled AC", "Compact Parking", "High Mileage", "Bluetooth Audio"],
-    tag: "Most Popular",
+    id: "facebook",
+    name: "Facebook",
+    url: "https://facebook.com/zenithfleets",
+    iconName: "facebook",
   },
   {
-    id: "maruti-dzire",
-    name: "Maruti Suzuki Dzire",
-    category: "both",
-    type: "Comfort Sedan",
-    seats: 4,
-    transmission: "Automatic",
-    fuel: "Petrol",
-    cabRate: "₹16/km",
-    selfDriveRate: "₹1,499/day",
-    popularFor: "Station transfers from Vapi & smooth business commutes",
-    features: ["Generous Boot Space", "Smooth Automatic", "Comfort Legroom", "FastTag Enabled"],
-    tag: "Best Value",
-  },
-  {
-    id: "maruti-ertiga",
-    name: "Maruti Suzuki Ertiga",
-    category: "both",
-    type: "7-Seater MPV",
-    seats: 7,
-    transmission: "Manual",
-    fuel: "CNG",
-    cabRate: "₹20/km",
-    selfDriveRate: "₹2,199/day",
-    popularFor: "Family trips, weekend getaways & group sightseeing",
-    features: ["7 True Seats", "Rear AC Vents", "Flexible Luggage", "Fuel Efficient"],
-    tag: "Family Favorite",
-  },
-  {
-    id: "mahindra-thar",
-    name: "Mahindra Thar 4x4",
-    category: "self-drive",
-    type: "Coastal Cruiser",
-    seats: 4,
-    transmission: "Automatic",
-    fuel: "Diesel",
-    cabRate: "On Request",
-    selfDriveRate: "₹3,499/day",
-    popularFor: "Unmatched beach drives, coastal sunset vibes & weekend thrills",
-    features: ["4x4 Drive", "Open Air Vibe", "Iconic Presence", "High Ground Clearance"],
-    tag: "Daman Beach Icon",
-  },
-  {
-    id: "toyota-innova-crysta",
-    name: "Toyota Innova Crysta",
-    category: "both",
-    type: "Premium MPV",
-    seats: 7,
-    transmission: "Automatic",
-    fuel: "Diesel",
-    cabRate: "₹24/km",
-    selfDriveRate: "₹3,199/day",
-    popularFor: "Executive travel, long coastal road trips & corporate delegates",
-    features: ["Captain Seats", "Plush Suspension", "Massive Trunk", "State Protocol Choice"],
-    tag: "Executive Class",
-  },
-  {
-    id: "hyundai-creta",
-    name: "Hyundai Creta SX",
-    category: "self-drive",
-    type: "Compact SUV",
-    seats: 5,
-    transmission: "Automatic",
-    fuel: "Petrol",
-    cabRate: "₹19/km",
-    selfDriveRate: "₹2,499/day",
-    popularFor: "Weekend getaways from Mumbai or Surat to Daman",
-    features: ["Panoramic Sunroof", "Ventilated Seats", "Cruise Control", "Bose Audio"],
+    id: "youtube",
+    name: "YouTube",
+    url: "https://youtube.com/@zenithfleets",
+    iconName: "youtube",
   },
 ];
 
@@ -206,41 +135,137 @@ export const DAMAN_ROUTES: DamanRoute[] = [
   },
 ];
 
-export const FAQ_ITEMS: FaqItem[] = [
+export const FAQ_ITEMS = [
   {
-    question: "What is Zenith, and what services do you offer in Daman?",
+    question: "What is Zenith, and what mobility services are available in Daman?",
     answer:
-      "Zenith is a unified mobility application operating across Daman, Vapi, Silvassa, and surrounding regions. We provide two core services in one single app: (1) On-demand Cab Hailing with verified professional chauffeurs for point-to-point and station trips, and (2) Self-Drive Car Rentals for travelers who want complete driving freedom by the hour, day, or weekend.",
-    category: "general",
+      "Zenith is a unified mobility application operating across Daman, Vapi, Silvassa, and coastal Gujarat. In one single app, we offer: (1) On-demand Cab Hailing with verified local chauffeurs for city commutes and Vapi Station pickups, and (2) Self-Drive Car Rentals for travelers who want complete freedom by the day or weekend.",
   },
   {
-    question: "How do I book a cab in Daman with Zenith?",
+    question: "How do I book a cab from Vapi Railway Station to Daman?",
     answer:
-      "Booking a cab is instant through the Zenith app or via our 24/7 helpline (+91 99791 11678). Simply set your pickup and drop location in Daman or Vapi, choose your vehicle category (Hatchback, Sedan, or SUV), and an assigned driver will arrive in minutes. All fares are transparent and upfront with zero meter-tampering or tourist surge gouging.",
+      "You can book instantly through the Zenith app or call our 24/7 Operations Desk at +91 99791 11678. Our driver meets you directly at the station exit with fixed upfront fares (₹350 – ₹450) and zero baggage surcharges.",
+  },
+  {
+    question: "What documents are required for Self-Drive Car Rentals?",
+    answer:
+      "For self-drive rentals in Daman, you require a valid original Indian Driving License and government ID (Aadhaar or Passport). Minimum age is 21 years. Verification is completed digitally in 2 minutes with zero paper forms.",
+  },
+  {
+    question: "Can I drive the rental car outside Daman into Gujarat or Maharashtra?",
+    answer:
+      "Yes! All Zenith fleet assets are commercial vehicles equipped with legitimate inter-state tourist permits and FastTag, allowing unrestricted travel across Daman, Gujarat, and Maharashtra without border delays.",
+  },
+];
+
+export const FLEET_VEHICLES_DATA: FleetVehicle[] = [
+  {
+    id: "swift",
+    name: "Maruti Suzuki Swift",
+    category: "both",
+    type: "Smart Hatchback",
+    seats: "4 Seats",
+    transmission: "Manual",
+    fuel: "Petrol &bull; Chilled AC",
+    cabRate: "₹14/km",
+    selfDriveRate: "₹1,199/day",
+    image: "/cars/swift.jpg",
+    popularFor: "Quick hops across Daman markets & beach hopping",
+    tag: "Most Popular",
+    luggage: "2 Medium Bags",
+    specs: {
+      ac: "Climate Controlled AC",
+      engine: "1.2L DualJet Petrol",
+      securityDeposit: "₹2,500 (Refundable)",
+      speedLimit: "80 km/h (Govt RTO Standard)",
+      doorstepDelivery: true,
+    },
+  },
+  {
+    id: "dzire",
+    name: "Maruti Suzuki Dzire",
+    category: "both",
+    type: "Comfort Sedan",
+    seats: "4 Seats",
+    transmission: "Automatic",
+    fuel: "Petrol &bull; FastTag",
+    cabRate: "₹16/km",
+    selfDriveRate: "₹1,499/day",
+    image: "/cars/dzire.jpg",
+    popularFor: "Vapi Railway Station direct pickups & business trips",
+    tag: "Best Value",
+    luggage: "3 Large Suitcases",
+    specs: {
+      ac: "Dual Rear AC Vents",
+      engine: "1.2L Smart Hybrid",
+      securityDeposit: "₹3,000 (Refundable)",
+      speedLimit: "80 km/h (Govt RTO Standard)",
+      doorstepDelivery: true,
+    },
+  },
+  {
+    id: "thar",
+    name: "Mahindra Thar 4x4",
+    category: "self-drive",
+    type: "Coastal Cruiser",
+    seats: "4 Seats",
+    transmission: "Automatic 4x4",
+    fuel: "Diesel &bull; Convertible",
+    selfDriveRate: "₹3,499/day",
+    image: "/cars/thar.jpg",
+    popularFor: "Scenic beach drives along Jampore & Devka promenades",
+    tag: "Daman Beach Icon",
+    luggage: "2 Duffle Bags + Beach Gear",
+    specs: {
+      ac: "High-Capacity Chilled AC",
+      engine: "2.2L mHawk Turbo Diesel",
+      securityDeposit: "₹5,000 (Refundable)",
+      speedLimit: "80 km/h (Govt RTO Standard)",
+      doorstepDelivery: true,
+    },
+  },
+  {
+    id: "ertiga",
+    name: "Maruti Suzuki Ertiga",
     category: "cabs",
+    type: "7-Seater MPV",
+    seats: "7 True Seats",
+    transmission: "Manual",
+    fuel: "CNG / Petrol &bull; Rear AC",
+    cabRate: "₹20/km",
+    selfDriveRate: "₹2,199/day",
+    image: "/cars/ertiga.jpg",
+    popularFor: "Family trips, weekend getaways & group transfers",
+    tag: "Family Choice",
+    luggage: "4 Large Suitcases",
+    specs: {
+      ac: "Roof Mounted 3-Row AC",
+      engine: "1.5L K15C Smart Hybrid",
+      securityDeposit: "₹3,500 (Refundable)",
+      speedLimit: "80 km/h (Govt RTO Standard)",
+      doorstepDelivery: true,
+    },
   },
   {
-    question: "How does Self-Drive Car Rental work in Daman?",
-    answer:
-      "Browse our fleet of verified self-drive vehicles, select your rental duration, and choose between doorstep delivery at your Daman resort or instant pickup from Vapi Station. A valid original Indian Driving License and government ID are required for digital verification.",
-    category: "self-drive",
-  },
-  {
-    question: "Can I drive the rental car outside Daman (e.g. to Gujarat or Maharashtra)?",
-    answer:
-      "Yes! All Zenith fleet assets are commercial vehicles equipped with legitimate inter-state tourist permits and FastTag, allowing smooth movement between Daman, Gujarat, and Maharashtra without border delays.",
-    category: "self-drive",
-  },
-  {
-    question: "Who owns and operates Zenith?",
-    answer:
-      "Zenith is owned and operated by Zenith Fleets Pvt. Ltd., headquartered at Royal Millenium on the Vapi-Daman Main Road (GSTIN: 26AACCZ8331J1Z0). We have been running large-scale mobility infrastructure across Dadra & Nagar Haveli and Daman & Diu since 2006, including serving as the official fleet partner for national events like the Khelo India Beach Games Diu and G20 Summit meetings.",
-    category: "general",
-  },
-  {
-    question: "How can local drivers join the Zenith Fleet Partner program?",
-    answer:
-      "Zenith provides brand-new, fully compliant commercial vehicles to qualified local drivers under our micro-entrepreneurship initiative. Drivers can earn between ₹50,000 to ₹1,00,000 per month operating on the Zenith platform with zero earning caps and full fleet maintenance support. Tap 'Learn More' to connect directly with our operations desk on WhatsApp.",
-    category: "general",
+    id: "innova",
+    name: "Toyota Innova Crysta",
+    category: "both",
+    type: "Executive MPV",
+    seats: "7 Captain Seats",
+    transmission: "Automatic",
+    fuel: "Diesel &bull; Highway Luxury",
+    cabRate: "₹24/km",
+    selfDriveRate: "₹3,199/day",
+    image: "/cars/innova.jpg",
+    popularFor: "Official state protocol, corporate VIPs & Surat transfers",
+    tag: "Executive Class",
+    luggage: "5 Large Bags",
+    specs: {
+      ac: "Automatic Climate Dual AC",
+      engine: "2.4L Diesel Intercooled",
+      securityDeposit: "₹5,000 (Refundable)",
+      speedLimit: "80 km/h (Govt RTO Standard)",
+      doorstepDelivery: true,
+    },
   },
 ];
