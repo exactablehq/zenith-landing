@@ -52,6 +52,8 @@ const jsonLd = {
   serviceType: ["Cab Hailing", "Self-Drive Car Rental", "Railway Station Transfers"],
 };
 
+import SmoothScroll from "@/components/SmoothScroll";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -69,7 +71,7 @@ export default function RootLayout({
         suppressHydrationWarning
         className="min-h-full flex flex-col bg-[#fdfdfd] text-zinc-900 font-sans selection:bg-zinc-950 selection:text-white"
       >
-        {children}
+        <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>
   );

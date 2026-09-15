@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import {
   ArrowRight,
   Menu,
@@ -21,8 +21,11 @@ import {
   Sparkles,
   ArrowUp,
   MessageCircle,
-  Briefcase,
   ChevronDown,
+  Award,
+  Trophy,
+  Landmark,
+  Building2,
 } from "lucide-react";
 import {
   ZENITH_COMPANY_INFO,
@@ -45,6 +48,186 @@ interface HeroServiceConfig {
   ctaText: string;
   ctaAction: string;
   icon: React.ComponentType<{ className?: string }>;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SCROLL-LINKED FEATURE CARD (Awwwards-style parallax exit)
+   As user scrolls past the card, it translates upward out of frame & fades.
+   On scroll back up, it smoothly reverses back into place.
+   Each card is staggered by index so they enter/exit one by one.
+   ───────────────────────────────────────────────────────────────────────────── */
+function ScrollFeatureCard({
+  children,
+  index,
+  className,
+}: {
+  children: React.ReactNode;
+  index: number;
+  className?: string;
+}) {
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Track the card's scroll progress through the viewport
+  const { scrollYProgress } = useScroll({
+    target: cardRef,
+    // "start end" = card top hits viewport bottom (0)
+    // "end start" = card bottom hits viewport top (1)
+    offset: ["start end", "end start"],
+  });
+
+  // Stagger offset per card — each card's keyframes shift slightly later
+  // so card 0 enters first and exits first, card 3 enters last and exits last
+  const stagger = index * 0.06;
+
+  // Entry keyframes (shifted later for higher index cards)
+  const entryStart = Math.min(0 + stagger, 0.25);
+  const entryEnd = Math.min(0.2 + stagger, 0.35);
+
+  // Exit keyframes (shifted later for higher index cards)
+  const exitStart = Math.min(0.6 + stagger, 0.78);
+  const exitEnd = Math.min(0.88 + stagger, 0.98);
+
+  const y = useTransform(
+    scrollYProgress,
+    [entryStart, entryEnd, exitStart, exitEnd],
+    [80, 0, 0, -120]
+  );
+  const opacity = useTransform(
+    scrollYProgress,
+    [entryStart, entryEnd, exitStart, exitEnd],
+    [0, 1, 1, 0]
+  );
+  const scale = useTransform(
+    scrollYProgress,
+    [entryStart, entryEnd, exitStart, exitEnd],
+    [0.95, 1, 1, 0.92]
+  );
+
+  return (
+    <motion.div
+      ref={cardRef}
+      style={{ y, opacity, scale }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   E-COMMERCE FLEET IMAGE (Scroll-Linked Zoom with Overflow Clipping)
+   As you scroll down into view, the car image starts zoomed in (1.38x)
+   and continuously zooms down to default (1.0x) bound to scroll progress.
+   On hover, it smoothly zooms back in (1.10x) clipped cleanly inside overflow.
+   ───────────────────────────────────────────────────────────────────────────── */
+function ScrollFleetVehicleImage({ src, alt }: { src: string; alt: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "center center"],
+  });
+
+  // Scroll progress 0 (bottom of screen) -> 1 (center of screen): scale 1.38 -> 1.0
+  const scrollScale = useTransform(scrollYProgress, [0, 1], [1.38, 1.2]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden mb-5"
+    >
+      <motion.div
+        style={{ scale: scrollScale }}
+        className="w-full h-full relative overflow-hidden pointer-events-auto"
+      >
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes="(max-width: 768px) 100vw, 400px"
+          className="object-contain p-3 transition-transform duration-500 ease-out group-hover:scale-110"
+        />
+      </motion.div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SCROLL-LINKED PHONE (Awwwards-style parallax with subtle rotation)
+   Each phone enters from a different direction with a slight tilt,
+   wiggles/bounces at the contact point, then exits in the opposite direction.
+   6-point keyframe: entry → overshoot → settle → rest → exit
+   ───────────────────────────────────────────────────────────────────────────── */
+function ScrollPhone({
+  children,
+  className,
+  entryX = -40,
+  entryY = 75,
+  entryRotate = -5,
+  exitX = 40,
+  exitY = -100,
+  exitRotate = 4,
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  entryX?: number;
+  entryY?: number;
+  entryRotate?: number;
+  exitX?: number;
+  exitY?: number;
+  exitRotate?: number;
+  delay?: number;
+}) {
+  const phoneRef = useRef<HTMLDivElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: phoneRef,
+    offset: ["start end", "end start"],
+  });
+
+  // 4-point scroll progress keyframes: entry → contact at center → rest → separate exit
+  const p1 = 0 + delay;       // entry start
+  const p2 = 0.25 + delay;    // contacts & rests at center
+  const p3 = 0.65 + delay;    // exit begins
+  const p4 = 0.95 + delay;    // fully exited
+
+  const y = useTransform(
+    scrollYProgress,
+    [p1, p2, p3, p4],
+    [entryY, 0, 0, exitY]
+  );
+  const x = useTransform(
+    scrollYProgress,
+    [p1, p2, p3, p4],
+    [entryX, 0, 0, exitX]
+  );
+  const rotate = useTransform(
+    scrollYProgress,
+    [p1, p2, p3, p4],
+    [entryRotate, 0, 0, exitRotate]
+  );
+  const opacity = useTransform(
+    scrollYProgress,
+    [p1, p2, p3, p4],
+    [0, 1, 1, 1]
+  );
+  const scale = useTransform(
+    scrollYProgress,
+    [p1, p2, p3, p4],
+    [0.94, 1, 1, 0.94]
+  );
+
+  return (
+    <motion.div
+      ref={phoneRef}
+      style={{ y, x, rotate, opacity, scale }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
 export default function LandingPage() {
@@ -89,7 +272,11 @@ export default function LandingPage() {
   }, [selectedVehicle, legalModal]);
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (typeof window !== "undefined" && (window as any).lenisInstance) {
+      (window as any).lenisInstance.scrollTo(0, { duration: 1.2 });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   const heroServices: HeroServiceConfig[] = [
@@ -115,7 +302,7 @@ export default function LandingPage() {
         "Drive on your own schedule. Keyless digital unlock, unlimited kilometers, and doorstep delivery directly to your hotel or beach resort.",
       tag: "Doorstep Delivery",
       priceBadge: "From ₹1,199 / day",
-      imageSrc: "/cars/thar.jpg",
+      imageSrc: "/cars/hero-thar.png",
       imageAlt: "Zenith Self-Drive Mahindra Thar 4x4 in Daman",
       ctaText: "Rent Self-Drive Car",
       ctaAction: `tel:${ZENITH_COMPANY_INFO.phoneRaw}`,
@@ -129,7 +316,7 @@ export default function LandingPage() {
         "Seamless transfers from Vapi Junction platform exit to Jampore and Devka beach resorts. Fixed upfront fares with zero luggage negotiations.",
       tag: "Platform to Hotel",
       priceBadge: "Fixed ₹350 – ₹450",
-      imageSrc: "/cars/dzire.jpg",
+      imageSrc: "/cars/hero-dzire.png",
       imageAlt: "Zenith Vapi Railway Station to Daman Beach Transfer",
       ctaText: "Reserve Station Pickup",
       ctaAction: `tel:${ZENITH_COMPANY_INFO.phoneRaw}`,
@@ -143,7 +330,7 @@ export default function LandingPage() {
         "Experience the Arabian Sea breeze in style. Rugged 4x4 convertible Thar rentals crafted for scenic sunset drives along Jampore and Devka Beach.",
       tag: "Beach Lifestyle Icon",
       priceBadge: "From ₹3,499 / day",
-      imageSrc: "/cars/thar.jpg",
+      imageSrc: "/cars/hero-thar-red.png",
       imageAlt: "Mahindra Thar 4x4 Coastal Beach Rental Daman",
       ctaText: "Reserve Thar 4x4",
       ctaAction: `tel:${ZENITH_COMPANY_INFO.phoneRaw}`,
@@ -157,7 +344,7 @@ export default function LandingPage() {
         "Micro-entrepreneurship for 100 qualified drivers across Daman, Vapi, and Silvassa. Brand-new commercial car provided with ₹50,000–₹1,00,000/mo earning.",
       tag: "100 Fleet Operators",
       priceBadge: "₹50k – ₹1L / mo",
-      imageSrc: "/cars/ertiga.jpg",
+      imageSrc: "/cars/hero-ertiga.png",
       imageAlt: "Zenith Fleet Partner Micro Entrepreneurship Program",
       ctaText: "Apply via WhatsApp",
       ctaAction: ZENITH_COMPANY_INFO.driverWhatsappUrl,
@@ -228,11 +415,10 @@ export default function LandingPage() {
           STICKY HEADER WITH CAREERS ("WE'RE HIRING") & CALL ACTION
          ========================================================================= */}
       <header
-        className={`fixed top-0 left-0 w-full z-50 px-6 sm:px-12 lg:px-16 transition-all duration-300 flex items-center justify-between ${
-          isScrolled
-            ? "py-3 sm:py-3.5 bg-white/90 backdrop-blur-xl border-b border-zinc-200/70 shadow-[0_4px_20px_rgba(0,0,0,0.03)]"
-            : "py-5 sm:py-6 lg:py-7 bg-transparent"
-        }`}
+        className={`fixed top-0 left-0 w-full z-50 px-6 sm:px-12 lg:px-16 transition-all duration-300 flex items-center justify-between ${isScrolled
+          ? "py-3 sm:py-3.5 bg-white/90 backdrop-blur-xl border-b border-zinc-200/70 shadow-[0_4px_20px_rgba(0,0,0,0.03)]"
+          : "py-5 sm:py-6 lg:py-7 bg-transparent"
+          }`}
       >
         {/* Brand Logo: Zenith */}
         <a
@@ -399,27 +585,31 @@ export default function LandingPage() {
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentHero.id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 60 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                  exit={{ opacity: 0, y: -60 }}
+                  transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+                  className="flex flex-col"
                 >
                   {/* Floating Highlight Badge */}
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 text-zinc-800 text-[12px] font-semibold border border-zinc-200/80 mb-4">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 text-zinc-800 text-[12px] font-semibold border border-zinc-200/80 mb-4 w-fit">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#1758A5] animate-pulse" />
                     <span>{currentHero.tag}</span>
                     <span className="text-zinc-400">&bull;</span>
                     <span className="text-[#1758A5] font-bold">{currentHero.priceBadge}</span>
                   </div>
 
+                  {/* Main Headline */}
                   <h1 className="text-[44px] sm:text-[54px] md:text-[64px] lg:text-[58px] xl:text-[72px] font-extrabold tracking-[-0.035em] leading-[1.03] text-black whitespace-pre-line">
                     {currentHero.headline}
                   </h1>
 
+                  {/* Subtitle Paragraph */}
                   <p className="mt-5 sm:mt-6 text-zinc-600 text-[15px] sm:text-[16px] lg:text-[15.5px] xl:text-[17px] leading-[1.58] max-w-[420px] font-normal">
                     {currentHero.subtitle}
                   </p>
 
+                  {/* CTA Action Button */}
                   <div className="mt-7 flex items-center gap-4">
                     <a
                       href={currentHero.ctaAction}
@@ -435,29 +625,32 @@ export default function LandingPage() {
               </AnimatePresence>
             </div>
 
-            {/* RIGHT COLUMN: DYNAMIC CAR & MAP ROUTE NETWORK */}
-            <div className="lg:col-span-7 relative w-full h-[320px] sm:h-[420px] lg:h-[480px] xl:h-[520px] flex items-end justify-end">
+            {/* RIGHT COLUMN: DYNAMIC CAR & MAP ROUTE NETWORK (STUCK TO RIGHT EDGE) */}
+            <div className="lg:col-span-7 relative w-full h-[340px] sm:h-[440px] lg:h-[520px] xl:h-[580px] flex items-end justify-end overflow-visible">
               {/* Map Background Image */}
               <div className="absolute inset-0 z-0 pointer-events-none select-none overflow-hidden flex items-center justify-center">
-                <div className="relative w-full h-full max-w-[850px] max-h-[550px] opacity-30 [mask-image:radial-gradient(ellipse_at_center,black_45%,transparent_85%)]">
+                <div className="relative w-full h-full max-w-[900px] max-h-[580px] opacity-30 [mask-image:radial-gradient(ellipse_at_center,black_45%,transparent_85%)]">
                   <Image
                     src="/map.png"
                     alt="Map Navigation Daman"
                     fill
                     priority
-                    sizes="(max-width: 1200px) 700px, 900px"
-                    className="object-contain object-center scale-105"
+                    sizes="(max-width: 1200px) 750px, 1000px"
+                    className="object-contain object-center scale-110"
                   />
                 </div>
               </div>
 
-              {/* Dynamic Vehicle Cutout with Smooth Physics */}
-              <div className="relative z-10 w-full max-w-[760px] lg:max-w-[880px] xl:max-w-[1000px] -mr-4 sm:-mr-8 lg:-mr-12 xl:-mr-16">
-                {/* Floating Live Telemetry Badge (Ambient Physics) */}
+              {/* Dynamic Vehicle Cutout - Stuck to Right Edge & Scaled Up */}
+              <div className="relative z-10 w-full max-w-[620px] sm:max-w-[780px] lg:max-w-[960px] xl:max-w-[1140px] 2xl:max-w-[1280px] mr-0 sm:-mr-12 lg:-mr-20 xl:-mr-28 2xl:-mr-36 flex flex-col items-end">
+                {/* Floating Live Telemetry Badge (Static solid lock-on, no wiggle) */}
                 <motion.div
-                  animate={{ y: [0, -6, 0] }}
-                  transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
-                  className="hidden sm:flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white/95 backdrop-blur-md border border-zinc-200/90 shadow-[0_8px_25px_rgba(0,0,0,0.06)] absolute top-2 sm:top-4 left-0 sm:left-6 z-20"
+                  key={`telemetry-${currentHero.id}`}
+                  initial={{ opacity: 0, y: 10, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                  transition={{ delay: 0.15, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  className="hidden sm:flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white/95 backdrop-blur-md border border-zinc-200/90 shadow-[0_8px_25px_rgba(0,0,0,0.06)] absolute top-2 sm:top-4 left-2 sm:left-8 z-20"
                 >
                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   <div className="flex flex-col text-left">
@@ -469,24 +662,33 @@ export default function LandingPage() {
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={currentHero.id}
-                    initial={{ opacity: 0, x: 40, scale: 0.98 }}
-                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                    exit={{ opacity: 0, x: -40, scale: 0.98 }}
-                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    className="relative flex flex-col items-end"
+                    className="relative flex flex-col items-end w-full"
                   >
-                    <div className="relative w-full aspect-[16/9.2] sm:aspect-[16/8.8]">
-                      <Image
-                        src={currentHero.imageSrc}
-                        alt={currentHero.imageAlt}
-                        fill
-                        priority
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 1000px"
-                        className="object-contain object-right-bottom scale-[1.05] sm:scale-100 drop-shadow-lg"
-                      />
-                    </div>
-                    <div className="w-[85%] h-5 sm:h-7 -mt-3 sm:-mt-5 mr-[5%] car-shadow pointer-events-none" />
-                    <div className="w-[75%] h-3 sm:h-4 -mt-3 mr-[10%] car-contact-shadow pointer-events-none" />
+                    {/* Cinematic Entrance from Right */}
+                    <motion.div
+                      initial={{ opacity: 0, x: 120, scale: 0.97 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: -120, scale: 0.97 }}
+                      transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+                      className="relative w-full flex flex-col items-end origin-right-bottom"
+                    >
+                      <div className="relative w-full aspect-[16/9] sm:aspect-[16/8.5] lg:aspect-[16/8]">
+                        <Image
+                          src={currentHero.imageSrc}
+                          alt={currentHero.imageAlt}
+                          fill
+                          priority
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1300px"
+                          className="object-contain object-right-bottom scale-[1.08] sm:scale-[1.16] lg:scale-[1.22] xl:scale-[1.26] origin-right-bottom drop-shadow-xl"
+                        />
+                      </div>
+
+                      {/* Synchronized Solid Ground Shadow & Tire Contact */}
+                      <div className="w-full flex flex-col items-end pointer-events-none">
+                        <div className="w-[90%] h-6 sm:h-8 lg:h-9 -mt-4 sm:-mt-6 lg:-mt-7 mr-[2%] car-shadow" />
+                        <div className="w-[80%] h-4 sm:h-5 lg:h-6 -mt-4 sm:-mt-5 mr-[6%] car-contact-shadow" />
+                      </div>
+                    </motion.div>
                   </motion.div>
                 </AnimatePresence>
               </div>
@@ -498,17 +700,24 @@ export default function LandingPage() {
         <footer className="relative z-30 w-full px-4 sm:px-12 lg:px-16 pb-6 lg:pb-8 pt-2">
           <div className="max-w-[1240px] mx-auto flex items-center justify-between gap-3 sm:gap-6 md:gap-8">
             <div className="flex-1 flex items-center justify-between sm:justify-center gap-2 sm:gap-4 md:gap-8 lg:gap-12 overflow-x-auto no-scrollbar py-2 px-1">
-              {heroServices.map((service) => {
+              {heroServices.map((service, index) => {
                 const isActive = activeHeroTab === service.id;
                 const IconComponent = service.icon;
 
                 return (
-                  <button
+                  <motion.button
                     key={service.id}
+                    initial={{ opacity: 0, y: 14 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: false, amount: 0.2 }}
+                    transition={{
+                      duration: 0.6,
+                      delay: index * 0.06,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
                     onClick={() => setActiveHeroTab(service.id)}
-                    className={`group relative flex items-center justify-center p-2.5 sm:p-3 transition-all duration-300 focus:outline-none ${
-                      isActive ? "text-zinc-950 font-bold" : "text-zinc-400 hover:text-zinc-700 hover:scale-105 font-medium"
-                    }`}
+                    className={`group relative flex items-center justify-center p-2.5 sm:p-3 transition-colors duration-300 focus:outline-none ${isActive ? "text-zinc-950 font-bold" : "text-zinc-400 hover:text-zinc-700 hover:scale-105 font-medium"
+                      }`}
                     title={service.headline.replace("\n", " ")}
                     aria-label={`Select ${service.tabLabel}`}
                   >
@@ -523,12 +732,22 @@ export default function LandingPage() {
                       <IconComponent className={`w-3.5 h-3.5 ${isActive ? "text-[#1758A5]" : "text-zinc-400 group-hover:text-zinc-700"}`} />
                       <span>{service.tabLabel}</span>
                     </div>
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
 
-            <div className="flex-shrink-0 pl-1 sm:pl-2">
+            <motion.div
+              initial={{ opacity: 0, y: 14, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: false, amount: 0.2 }}
+              transition={{
+                duration: 0.6,
+                delay: heroServices.length * 0.06,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className="flex-shrink-0 pl-1 sm:pl-2"
+            >
               <button
                 onClick={handleNextHeroTab}
                 className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-500 hover:text-black shadow-xs hover:shadow-sm transition-all duration-150 active:scale-95 focus:outline-none"
@@ -536,39 +755,86 @@ export default function LandingPage() {
               >
                 <ArrowRight className="w-4 h-4" />
               </button>
-            </div>
+            </motion.div>
           </div>
         </footer>
       </main>
 
       {/* =========================================================================
-          INSTITUTIONAL CREDENTIALS & TRUST RIBBON (KHELO INDIA & G20)
+          INSTITUTIONAL CREDENTIALS & TRUST BAR (LUXURY AUTHORITY CARDS)
          ========================================================================= */}
-      <section className="w-full border-y border-zinc-200/70 bg-zinc-50/60 py-4.5 px-6 sm:px-12 lg:px-16">
-        <div className="max-w-[1400px] mx-auto flex flex-wrap items-center justify-between gap-4 sm:gap-6 text-[12px] sm:text-[13px] text-zinc-600 font-medium">
-          <div className="flex items-center gap-2.5">
-            <span className="w-2 h-2 rounded-full bg-[#1758A5]" />
-            <span className="font-bold text-zinc-950">Est. 2006</span>
-            <span className="text-zinc-400">&bull;</span>
-            <span>19+ Years In Daman &amp; Diu UT</span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-600" />
-            <span className="font-bold text-zinc-950">250+ Commercial Assets</span>
-            <span className="text-zinc-400">&bull;</span>
-            <span>Company-Owned Infrastructure</span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <span className="w-2 h-2 rounded-full bg-[#1758A5]" />
-            <span className="font-bold text-zinc-950">Khelo India Beach Games Diu</span>
-            <span className="text-zinc-400">&bull;</span>
-            <span>Official Fleet Partner (2024 &amp; 2025)</span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <span className="w-2 h-2 rounded-full bg-zinc-900" />
-            <span className="font-bold text-zinc-950">G20 Summit Meetings</span>
-            <span className="text-zinc-400">&bull;</span>
-            <span>Official Fleet Operations</span>
+      <section className="w-full border-y border-zinc-200/80 bg-zinc-50/50 py-6 sm:py-8 px-6 sm:px-12 lg:px-16">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 lg:gap-5">
+            {[
+              {
+                id: "heritage",
+                icon: Award,
+                iconBg: "bg-blue-50 border-blue-100 text-[#1758A5]",
+                title: "19+ Years",
+                badge: "Est. 2006",
+                badgeStyle: "text-blue-700 bg-blue-50 border-blue-200/60",
+                subtitle: "Daman & Diu Union Territory",
+              },
+              {
+                id: "assets",
+                icon: Building2,
+                iconBg: "bg-emerald-50 border-emerald-100 text-emerald-600",
+                title: "250+ Fleet Assets",
+                badge: null,
+                badgeStyle: "",
+                subtitle: "100% Company-Owned Cars",
+              },
+              {
+                id: "khelo-india",
+                icon: Trophy,
+                iconBg: "bg-amber-50 border-amber-100 text-amber-600",
+                title: "Khelo India Games",
+                badge: null,
+                badgeStyle: "",
+                subtitle: "Official Fleet Partner '24 & '25",
+              },
+              {
+                id: "g20",
+                icon: Landmark,
+                iconBg: "bg-zinc-100 border-zinc-200 text-zinc-900",
+                title: "G20 Summit",
+                badge: "Official",
+                badgeStyle: "text-zinc-700 bg-zinc-100 border-zinc-200/60",
+                subtitle: "Government Protocol Mobility",
+              },
+            ].map((item, index) => {
+              const IconComp = item.icon;
+              return (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 14 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: false, amount: 0.2 }}
+                  transition={{
+                    duration: 0.6,
+                    delay: index * 0.06,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  className="group relative flex items-center gap-4 p-4 sm:p-4.5 rounded-2xl bg-white border border-zinc-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:border-zinc-300 transition-all duration-200"
+                >
+                  <div className={`w-11 h-11 rounded-xl border flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-200 ${item.iconBg}`}>
+                    <IconComp className="w-5 h-5" />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[14.5px] sm:text-[15.5px] font-extrabold text-zinc-950 tracking-tight truncate">{item.title}</span>
+                      {item.badge && (
+                        <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-md border ${item.badgeStyle}`}>
+                          {item.badge}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[12px] text-zinc-500 font-medium truncate mt-0.5">{item.subtitle}</span>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -608,9 +874,8 @@ export default function LandingPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveServiceMode(tab.id)}
-                  className={`relative flex items-center gap-2 py-2.5 px-5 sm:px-7 rounded-xl text-[13.5px] sm:text-[14.5px] font-semibold transition-colors duration-200 focus:outline-none ${
-                    isSelected ? "text-zinc-950" : "text-zinc-500 hover:text-zinc-800"
-                  }`}
+                  className={`relative flex items-center gap-2 py-2.5 px-5 sm:px-7 rounded-xl text-[13.5px] sm:text-[14.5px] font-semibold transition-colors duration-200 focus:outline-none ${isSelected ? "text-zinc-950" : "text-zinc-500 hover:text-zinc-800"
+                    }`}
                 >
                   {isSelected && (
                     <motion.div
@@ -632,10 +897,10 @@ export default function LandingPage() {
           <AnimatePresence mode="wait">
             <motion.div
               key={activeServiceMode}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 60 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              exit={{ opacity: 0, y: -60 }}
+              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
               className="w-full max-w-[1240px] rounded-3xl bg-[#f8f8fa] border border-zinc-200/80 p-8 sm:p-12 lg:p-16 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center shadow-xs"
             >
               {activeServiceMode === "cabs" && (
@@ -764,11 +1029,10 @@ export default function LandingPage() {
                             key={route.id}
                             type="button"
                             onClick={() => setSelectedRouteId(route.id)}
-                            className={`w-full flex items-center justify-between p-3.5 rounded-xl border text-left text-xs sm:text-sm font-medium transition-all duration-150 ${
-                              isSelected
-                                ? "bg-blue-50/60 border-[#1758A5] text-zinc-950 shadow-xs"
-                                : "bg-white border-zinc-200/80 text-zinc-700 hover:border-zinc-300"
-                            }`}
+                            className={`w-full flex items-center justify-between p-3.5 rounded-xl border text-left text-xs sm:text-sm font-medium transition-all duration-150 ${isSelected
+                              ? "bg-blue-50/60 border-[#1758A5] text-zinc-950 shadow-xs"
+                              : "bg-white border-zinc-200/80 text-zinc-700 hover:border-zinc-300"
+                              }`}
                           >
                             <div className="flex items-center gap-2.5">
                               <span className={`w-2 h-2 rounded-full ${isSelected ? "bg-[#1758A5]" : "bg-zinc-300"}`} />
@@ -917,11 +1181,10 @@ export default function LandingPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveFleetTab(tab.id)}
-                  className={`px-5 sm:px-6 py-2 rounded-xl sm:rounded-2xl text-[13px] sm:text-[14px] font-semibold transition-all duration-200 focus:outline-none ${
-                    isSelected
-                      ? "bg-black text-white shadow-sm"
-                      : "bg-[#f4f4f6] text-zinc-700 hover:bg-zinc-200/80 hover:text-black"
-                  }`}
+                  className={`px-5 sm:px-6 py-2 rounded-xl sm:rounded-2xl text-[13px] sm:text-[14px] font-semibold transition-all duration-200 focus:outline-none ${isSelected
+                    ? "bg-black text-white shadow-sm"
+                    : "bg-[#f4f4f6] text-zinc-700 hover:bg-zinc-200/80 hover:text-black"
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -935,14 +1198,15 @@ export default function LandingPage() {
             className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mt-12"
           >
             <AnimatePresence>
-              {filteredFleet.map((vehicle) => (
+              {filteredFleet.map((vehicle, index) => (
                 <motion.div
                   key={vehicle.id}
                   layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.35 }}
+                  initial={{ opacity: 0, y: 0 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: false, amount: 0.15 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.5, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
                   onClick={() => setSelectedVehicle(vehicle)}
                   className="group relative rounded-3xl bg-white border border-zinc-200/80 p-6 flex flex-col justify-between hover:border-zinc-300 hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer"
                 >
@@ -967,16 +1231,8 @@ export default function LandingPage() {
                       {vehicle.popularFor}
                     </p>
 
-                    {/* Real Generated Studio Photography */}
-                    <div className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden bg-[#f7f7f9] border border-zinc-100 mb-5">
-                      <Image
-                        src={vehicle.image}
-                        alt={vehicle.name}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 400px"
-                        className="object-contain p-3 group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
+                    {/* E-Commerce Product Zoom: Scroll-Linked Entry Zoom & Hover Zoom inside Overflow Container */}
+                    <ScrollFleetVehicleImage src={vehicle.image} alt={vehicle.name} />
 
                     {/* Spec Chips */}
                     <div className="flex items-center justify-between text-[12.5px] text-zinc-600 bg-[#f9f9fb] px-3.5 py-2.5 rounded-xl border border-zinc-100 mb-6">
@@ -1047,43 +1303,49 @@ export default function LandingPage() {
             <div className="absolute w-[360px] sm:w-[500px] h-[360px] sm:h-[500px] bg-gradient-to-tr from-[#1758A5]/10 via-zinc-100/40 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
 
             <div className="relative w-full max-w-[500px] sm:max-w-[580px] lg:max-w-[620px] h-[480px] sm:h-[580px] lg:h-[620px] flex items-center justify-center">
-              {/* BACK PHONE: phone2.png (Tilted Left) */}
-              <motion.div
-                initial={{ opacity: 0, x: -40, rotate: -4 }}
-                whileInView={{ opacity: 1, x: 0, rotate: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute left-[2%] sm:left-[5%] lg:left-[2%] top-[10%] sm:top-[8%] w-[210px] sm:w-[270px] lg:w-[300px] z-10"
+              {/* BACK PHONE: phone2.png — enters from left (-120), meets in center, exits to left (-130) */}
+              <ScrollPhone
+                entryX={-120}
+                entryY={75}
+                entryRotate={-7}
+                exitX={-130}
+                exitY={-110}
+                exitRotate={-6}
+                delay={0}
+                className="absolute left-[0%] sm:left-[3%] lg:left-[0%] top-[10%] sm:top-[8%] w-[230px] sm:w-[290px] lg:w-[330px] z-10"
               >
                 <div className="relative w-full aspect-[1/2.05] drop-shadow-[-20px_25px_35px_rgba(0,0,0,0.18)]">
                   <Image
                     src="/phone2.png"
                     alt="Zenith App Route Navigation Screen"
                     fill
-                    sizes="(max-width: 768px) 250px, 320px"
+                    sizes="(max-width: 768px) 280px, 350px"
                     className="object-contain"
                   />
                 </div>
-              </motion.div>
+              </ScrollPhone>
 
-              {/* FRONT PHONE: phone1.png (Upright & Overlapping) */}
-              <motion.div
-                initial={{ opacity: 0, y: 50, scale: 0.95 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.85, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute right-[2%] sm:right-[8%] lg:right-[29%] top-[0%] sm:top-[2%] w-[220px] sm:w-[280px] lg:w-[315px] z-25"
+              {/* FRONT PHONE: phone1.png — enters from right (+120), meets in center, exits to right (+130) */}
+              <ScrollPhone
+                entryX={120}
+                entryY={85}
+                entryRotate={7}
+                exitX={130}
+                exitY={-100}
+                exitRotate={6}
+                delay={0.04}
+                className="absolute right-[0%] sm:right-[5%] lg:right-[26%] top-[0%] sm:top-[2%] w-[240px] sm:w-[300px] lg:w-[340px] z-25"
               >
                 <div className="relative w-full aspect-[1/1.5] drop-shadow-[25px_30px_45px_rgba(0,0,0,0.22)]">
                   <Image
                     src="/phone1.png"
                     alt="Zenith App Fleet Booking Screen"
                     fill
-                    sizes="(max-width: 768px) 270px, 340px"
+                    sizes="(max-width: 768px) 290px, 360px"
                     className="object-contain"
                   />
                 </div>
-              </motion.div>
+              </ScrollPhone>
             </div>
           </div>
 
@@ -1112,12 +1374,7 @@ export default function LandingPage() {
                   href="#app"
                   className="group inline-flex items-center gap-2.5 px-7 py-3 rounded-full bg-black text-white text-[14px] font-semibold hover:bg-zinc-800 transition-all duration-200 shadow-md hover:shadow-lg active:scale-95"
                 >
-                  <svg
-                    viewBox="0 0 170 170"
-                    className="w-4 h-4 fill-current transition-transform group-hover:scale-110"
-                  >
-                    <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.67-7.81-11.94-14.3-6.74-10.32-12.01-22.18-15.82-35.58-3.81-13.4-5.72-25.96-5.72-37.68 0-14.02 3.87-25.86 11.6-35.52 7.74-9.66 17.43-14.61 29.08-14.85 4.57 0 9.78 1.25 15.63 3.75 5.85 2.5 9.77 3.75 11.75 3.75 1.52 0 5.66-1.33 12.42-3.99 6.76-2.66 12.29-3.79 16.59-3.39 12.39.99 22.09 5.56 29.1 13.72-10.88 6.53-16.2 15.53-15.96 27 0 9.78 3.81 17.88 11.43 24.3 7.62 6.42 16.71 10.05 27.27 10.89-2.29 6.96-5.11 14.15-8.47 21.57zM119.22 31.84c0-7.39 2.72-14.35 8.16-20.88 5.44-6.53 12.18-10.51 20.22-11.96.22 1.19.33 2.28.33 3.27 0 7.39-2.83 14.46-8.49 21.2-5.66 6.74-12.63 10.66-20.9 11.77-.22-1.08-.32-2.21-.32-3.4z" />
-                  </svg>
+                  <img src="/apple-logo-white.svg" width={20} height={20} alt="" />
                   <span>Download App</span>
                 </a>
               </div>
@@ -1136,10 +1393,10 @@ export default function LandingPage() {
         <div className="w-full max-w-[1400px] mx-auto flex flex-col items-start">
           {/* SECTION HEADER */}
           <motion.div
-            initial={{ opacity: 0, y: 25 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            viewport={{ once: false, amount: 0.2 }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col items-start text-left max-w-2xl"
           >
             <span className="text-[11px] sm:text-[12px] font-bold tracking-[0.24em] text-zinc-400 uppercase font-sans mb-3">
@@ -1157,75 +1414,76 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-          {/* 4 LUXURY FEATURE CARDS */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 w-full max-w-[1080px] mt-10 sm:mt-14">
-            {/* CARD 1 */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-              className="group relative bg-white rounded-3xl border border-zinc-200/80 p-5 sm:p-6 flex flex-col justify-between aspect-square shadow-[0_4px_25px_rgba(0,0,0,0.02)] hover:shadow-[0_16px_35px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300"
-            >
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#eef8f4] flex items-center justify-center text-emerald-700 transition-transform group-hover:scale-105">
-                <Clock className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
-              </div>
-              <h3 className="text-[14.5px] sm:text-[15.5px] font-bold text-zinc-950 leading-snug tracking-tight">
-                24-hour car <br />
-                delivery & cabs
-              </h3>
-            </motion.div>
+          {/* FULL WIDTH LUXURY KEY FEATURE CARDS */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-7 lg:gap-8 w-full mt-12 sm:mt-16">
+            {[
+              {
+                id: "delivery",
+                icon: Clock,
+                iconBg: "bg-[#eef8f4] text-emerald-700 border-emerald-100",
+                badge: "Instant Dispatch",
+                title: "24-Hour Car Delivery & Cabs",
+                description:
+                  "Instant dispatch across Daman town, beach resorts, and stations with 3-minute average pickup time.",
+              },
+              {
+                id: "support",
+                icon: Phone,
+                iconBg: "bg-[#fbf0f2] text-rose-600 border-rose-100",
+                badge: "Operations Desk",
+                title: "24/7 Dedicated Support",
+                description:
+                  "Live WhatsApp operations desk & round-the-clock emergency road assistance across UT Daman.",
+              },
+              {
+                id: "sanitized",
+                icon: Sparkles,
+                iconBg: "bg-[#eef2fc] text-indigo-600 border-indigo-100",
+                badge: "Certified Clean",
+                title: "100% Chilled AC & Sanitized",
+                description:
+                  "Hygienic climate-controlled cabins, daily detailing, and verified 30-point mechanical safety checks.",
+              },
+              {
+                id: "pricing",
+                icon: ShieldCheck,
+                iconBg: "bg-[#0C284A]/10 text-[#1758A5] border-blue-100",
+                badge: "Zero Surges",
+                title: "Surge-Free Transparent Rates",
+                description:
+                  "Fixed upfront platform-to-beach fares with no tourist markups, surge multipliers, or hidden fees.",
+              },
+            ].map((feature, index) => {
+              const IconComponent = feature.icon;
 
-            {/* CARD 2 */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="group relative bg-white rounded-3xl border border-zinc-200/80 p-5 sm:p-6 flex flex-col justify-between aspect-square shadow-[0_4px_25px_rgba(0,0,0,0.02)] hover:shadow-[0_16px_35px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300"
-            >
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#fbf0f2] flex items-center justify-center text-rose-600 transition-transform group-hover:scale-105">
-                <Phone className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
-              </div>
-              <h3 className="text-[14.5px] sm:text-[15.5px] font-bold text-zinc-950 leading-snug tracking-tight">
-                24/7 dedicated <br />
-                support
-              </h3>
-            </motion.div>
+              return (
+                <ScrollFeatureCard
+                  key={feature.id}
+                  index={index}
+                  className="group relative bg-white rounded-3xl sm:rounded-[32px] border border-zinc-200/80 p-7 sm:p-8 lg:p-8 flex flex-col justify-between min-h-[280px] sm:min-h-[300px] lg:min-h-[320px] shadow-[0_4px_25px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.07)] transition-shadow duration-300"
+                >
+                  <div className="flex items-start justify-between">
+                    <div
+                      className={`w-13 h-13 sm:w-14 sm:h-14 rounded-2xl border flex items-center justify-center transition-transform group-hover:scale-105 duration-200 ${feature.iconBg}`}
+                    >
+                      <IconComponent className="w-6 h-6 sm:w-7 sm:h-7" />
+                    </div>
+                    <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider bg-zinc-50 border border-zinc-200/60 px-2.5 py-1 rounded-full">
+                      {feature.badge}
+                    </span>
+                  </div>
 
-            {/* CARD 3 */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="group relative bg-white rounded-3xl border border-zinc-200/80 p-5 sm:p-6 flex flex-col justify-between aspect-square shadow-[0_4px_25px_rgba(0,0,0,0.02)] hover:shadow-[0_16px_35px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300"
-            >
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#eef2fc] flex items-center justify-center text-indigo-600 transition-transform group-hover:scale-105">
-                <Sparkles className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
-              </div>
-              <h3 className="text-[14.5px] sm:text-[15.5px] font-bold text-zinc-950 leading-snug tracking-tight">
-                100% chilled AC & <br />
-                sanitized fleet
-              </h3>
-            </motion.div>
-
-            {/* CARD 4 */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.7, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="group relative bg-white rounded-3xl border border-zinc-200/80 p-5 sm:p-6 flex flex-col justify-between aspect-square shadow-[0_4px_25px_rgba(0,0,0,0.02)] hover:shadow-[0_16px_35px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300"
-            >
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#0C284A]/10 flex items-center justify-center text-[#1758A5] transition-transform group-hover:scale-105">
-                <ShieldCheck className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
-              </div>
-              <h3 className="text-[14.5px] sm:text-[15.5px] font-bold text-zinc-950 leading-snug tracking-tight">
-                Surge-free <br />
-                transparent rates
-              </h3>
-            </motion.div>
+                  <div className="mt-6 flex flex-col">
+                    <h3 className="text-[18px] sm:text-[20px] font-extrabold text-zinc-950 tracking-tight leading-[1.2]">
+                      {feature.title}
+                    </h3>
+                    <p className="mt-2.5 text-[13.5px] sm:text-[14px] text-zinc-500 font-normal leading-[1.55]">
+                      {feature.description}
+                    </p>
+                  </div>
+                </ScrollFeatureCard>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -1261,9 +1519,8 @@ export default function LandingPage() {
                       {faq.question}
                     </span>
                     <ChevronDown
-                      className={`w-4 h-4 text-zinc-400 transition-transform duration-200 flex-shrink-0 ${
-                        isOpen ? "rotate-180 text-zinc-900" : ""
-                      }`}
+                      className={`w-4 h-4 text-zinc-400 transition-transform duration-200 flex-shrink-0 ${isOpen ? "rotate-180 text-zinc-900" : ""
+                        }`}
                     />
                   </button>
 
@@ -1334,12 +1591,7 @@ export default function LandingPage() {
                   href="#app"
                   className="group inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-white text-black text-[14px] font-semibold hover:bg-zinc-100 hover:shadow-lg transition-all duration-200 shadow-md active:scale-95"
                 >
-                  <svg
-                    viewBox="0 0 170 170"
-                    className="w-4 h-4 fill-current transition-transform group-hover:scale-110"
-                  >
-                    <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.67-7.81-11.94-14.3-6.74-10.32-12.01-22.18-15.82-35.58-3.81-13.4-5.72-25.96-5.72-37.68 0-14.02 3.87-25.86 11.6-35.52 7.74-9.66 17.43-14.61 29.08-14.85 4.57 0 9.78 1.25 15.63 3.75 5.85 2.5 9.77 3.75 11.75 3.75 1.52 0 5.66-1.33 12.42-3.99 6.76-2.66 12.29-3.79 16.59-3.39 12.39.99 22.09 5.56 29.1 13.72-10.88 6.53-16.2 15.53-15.96 27 0 9.78 3.81 17.88 11.43 24.3 7.62 6.42 16.71 10.05 27.27 10.89-2.29 6.96-5.11 14.15-8.47 21.57zM119.22 31.84c0-7.39 2.72-14.35 8.16-20.88 5.44-6.53 12.18-10.51 20.22-11.96.22 1.19.33 2.28.33 3.27 0 7.39-2.83 14.46-8.49 21.2-5.66 6.74-12.63 10.66-20.9 11.77-.22-1.08-.32-2.21-.32-3.4z" />
-                  </svg>
+                  <img src="/apple-logo-black.svg" width={20} height={20} alt="" />
                   <span>Download App</span>
                 </a>
 
@@ -1562,7 +1814,7 @@ export default function LandingPage() {
               </p>
 
               {/* Modal Image */}
-              <div className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden bg-[#f7f7f9] border border-zinc-100 mb-5">
+              <div className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden mb-5">
                 <Image
                   src={selectedVehicle.image}
                   alt={selectedVehicle.name}
