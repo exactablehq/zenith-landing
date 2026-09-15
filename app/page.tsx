@@ -70,27 +70,22 @@ function ScrollFeatureCard({
   // Track the card's scroll progress through the viewport
   const { scrollYProgress } = useScroll({
     target: cardRef,
-    // "start end" = card top hits viewport bottom (0)
-    // "end start" = card bottom hits viewport top (1)
     offset: ["start end", "end start"],
   });
 
   // Stagger offset per card — each card's keyframes shift slightly later
-  // so card 0 enters first and exits first, card 3 enters last and exits last
   const stagger = index * 0.06;
 
-  // Entry keyframes (shifted later for higher index cards)
   const entryStart = Math.min(0 + stagger, 0.25);
   const entryEnd = Math.min(0.2 + stagger, 0.35);
 
-  // Exit keyframes (shifted later for higher index cards)
   const exitStart = Math.min(0.6 + stagger, 0.78);
   const exitEnd = Math.min(0.88 + stagger, 0.98);
 
   const y = useTransform(
     scrollYProgress,
     [entryStart, entryEnd, exitStart, exitEnd],
-    [80, 0, 0, -120]
+    [110, 0, 0, -120]
   );
   const opacity = useTransform(
     scrollYProgress,
@@ -100,14 +95,14 @@ function ScrollFeatureCard({
   const scale = useTransform(
     scrollYProgress,
     [entryStart, entryEnd, exitStart, exitEnd],
-    [0.95, 1, 1, 0.92]
+    [0.90, 1, 1, 0.90]
   );
 
   return (
     <motion.div
       ref={cardRef}
       style={{ y, opacity, scale }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       className={className}
     >
       {children}
@@ -116,57 +111,54 @@ function ScrollFeatureCard({
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   E-COMMERCE FLEET IMAGE (Scroll-Linked Zoom with Overflow Clipping)
-   As you scroll down into view, the car image starts zoomed in (1.38x)
-   and continuously zooms down to default (1.0x) bound to scroll progress.
-   On hover, it smoothly zooms back in (1.10x) clipped cleanly inside overflow.
+   E-COMMERCE FLEET IMAGE BOX (Scroll-Linked Rising from Below & Fade)
+   The box container where the image resides fades in and rises from below
+   along with the car photography, zooming cleanly on hover.
    ───────────────────────────────────────────────────────────────────────────── */
 function ScrollFleetVehicleImage({ src, alt }: { src: string; alt: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ["start end", "center center"],
+    offset: ["start end", "end start"],
   });
 
-  // Scroll progress 0 (bottom of screen) -> 1 (center of screen): scale 1.38 -> 1.0
-  const scrollScale = useTransform(scrollYProgress, [0, 1], [1.38, 1.2]);
+  // Scroll progress: enters from bottom (0), full view (0.28-0.72), exits top (1.0)
+  const scrollY = useTransform(scrollYProgress, [0, 0.28, 0.72, 1], [65, 0, 0, -55]);
+  const scrollScale = useTransform(scrollYProgress, [0, 0.28, 0.72, 1], [0.88, 1, 1, 0.88]);
+  const scrollOpacity = useTransform(scrollYProgress, [0, 0.22, 0.78, 1], [0, 1, 1, 0]);
 
   return (
-    <div
+    <motion.div
       ref={containerRef}
-      className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden mb-5"
+      style={{ y: scrollY, scale: scrollScale, opacity: scrollOpacity }}
+      className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden mb-5 bg-gradient-to-b from-zinc-50 to-zinc-100/70 border border-zinc-200/70 p-2 shadow-xs group-hover:shadow-md transition-shadow pointer-events-auto"
     >
-      <motion.div
-        style={{ scale: scrollScale }}
-        className="w-full h-full relative overflow-hidden pointer-events-auto"
-      >
-        <Image
-          src={src}
-          alt={alt}
-          fill
-          sizes="(max-width: 768px) 100vw, 400px"
-          className="object-contain p-3 transition-transform duration-500 ease-out group-hover:scale-110"
-        />
-      </motion.div>
-    </div>
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes="(max-width: 768px) 100vw, 400px"
+        className="object-contain p-2.5 transition-transform duration-500 ease-out group-hover:scale-110"
+      />
+    </motion.div>
   );
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   SCROLL-LINKED PHONE (Awwwards-style parallax with subtle rotation)
-   Each phone enters from a different direction with a slight tilt,
-   wiggles/bounces at the contact point, then exits in the opposite direction.
-   6-point keyframe: entry → overshoot → settle → rest → exit
+   SCROLL-LINKED PHONE (Awwwards-style parallax: Rising up from bottom on scroll)
+   As user scrolls / swipes down into view, the phones emerge smoothly from down
+   (entryY: +380px / +440px) and fade in into place (opacity 0 → 1).
+   As user scrolls past, they exit upward (-240px) and fade out (opacity 1 → 0).
    ───────────────────────────────────────────────────────────────────────────── */
 function ScrollPhone({
   children,
   className,
-  entryX = -40,
-  entryY = 75,
+  entryX = 0,
+  entryY = 420,
   entryRotate = -5,
-  exitX = 40,
-  exitY = -100,
+  exitX = 0,
+  exitY = -240,
   exitRotate = 4,
   delay = 0,
 }: {
@@ -187,11 +179,10 @@ function ScrollPhone({
     offset: ["start end", "end start"],
   });
 
-  // 4-point scroll progress keyframes: entry → contact at center → rest → separate exit
-  const p1 = 0 + delay;       // entry start
-  const p2 = 0.25 + delay;    // contacts & rests at center
-  const p3 = 0.65 + delay;    // exit begins
-  const p4 = 0.95 + delay;    // fully exited
+  const p1 = Math.max(0, 0 + delay);
+  const p2 = Math.min(0.36 + delay, 0.48);
+  const p3 = Math.min(0.68 + delay, 0.78);
+  const p4 = Math.min(0.98 + delay, 1.0);
 
   const y = useTransform(
     scrollYProgress,
@@ -211,12 +202,12 @@ function ScrollPhone({
   const opacity = useTransform(
     scrollYProgress,
     [p1, p2, p3, p4],
-    [0, 1, 1, 1]
+    [0, 1, 1, 0]
   );
   const scale = useTransform(
     scrollYProgress,
     [p1, p2, p3, p4],
-    [0.94, 1, 1, 0.94]
+    [0.78, 1, 1, 0.84]
   );
 
   return (
@@ -481,9 +472,9 @@ export default function LandingPage() {
 
           <a
             href="#app"
-            className="group flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-black text-white text-[13.5px] font-semibold hover:bg-zinc-800 transition-all duration-200 shadow-sm hover:shadow active:scale-95"
+            className="group flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-[#1758A5] text-white text-[13.5px] font-semibold hover:bg-[#103866] transition-all duration-200 shadow-md hover:shadow-lg active:scale-95"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-[#1758A5] group-hover:scale-125 transition-transform" />
+            <span className="w-1.5 h-1.5 rounded-full bg-white group-hover:scale-125 transition-transform" />
             <span>Download App</span>
           </a>
         </div>
@@ -564,7 +555,7 @@ export default function LandingPage() {
               <a
                 href="#app"
                 onClick={() => setMobileMenuOpen(false)}
-                className="inline-flex items-center justify-center gap-2.5 w-full py-3 rounded-full bg-black text-white text-base font-semibold"
+                className="inline-flex items-center justify-center gap-2.5 w-full py-3 rounded-full bg-[#1758A5] text-white text-base font-semibold hover:bg-[#103866] transition-colors shadow-md"
               >
                 <span>Download Zenith App</span>
               </a>
@@ -615,7 +606,7 @@ export default function LandingPage() {
                       href={currentHero.ctaAction}
                       target={currentHero.ctaAction.startsWith("http") ? "_blank" : undefined}
                       rel={currentHero.ctaAction.startsWith("http") ? "noopener noreferrer" : undefined}
-                      className="group inline-flex items-center gap-2.5 px-7 py-3 rounded-full bg-black text-white text-[14px] font-semibold hover:bg-zinc-800 transition-all duration-200 shadow-sm hover:shadow active:scale-95"
+                      className="group inline-flex items-center gap-2.5 px-7 py-3 rounded-full bg-[#1758A5] text-white text-[14px] font-semibold hover:bg-[#103866] transition-all duration-200 shadow-md hover:shadow-lg active:scale-95"
                     >
                       <span>{currentHero.ctaText}</span>
                       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -750,7 +741,7 @@ export default function LandingPage() {
             >
               <button
                 onClick={handleNextHeroTab}
-                className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-500 hover:text-black shadow-xs hover:shadow-sm transition-all duration-150 active:scale-95 focus:outline-none"
+                className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#1758A5] text-white hover:bg-[#103866] shadow-xs hover:shadow-sm transition-all duration-150 active:scale-95 focus:outline-none"
                 aria-label="Next service"
               >
                 <ArrowRight className="w-4 h-4" />
@@ -808,12 +799,12 @@ export default function LandingPage() {
               return (
                 <motion.div
                   key={item.id}
-                  initial={{ opacity: 0, y: 14 }}
+                  initial={{ opacity: 0, y: 70 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: false, amount: 0.2 }}
+                  viewport={{ once: false, amount: 0.15 }}
                   transition={{
-                    duration: 0.6,
-                    delay: index * 0.06,
+                    duration: 0.7,
+                    delay: index * 0.08,
                     ease: [0.22, 1, 0.36, 1],
                   }}
                   className="group relative flex items-center gap-4 p-4 sm:p-4.5 rounded-2xl bg-white border border-zinc-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:border-zinc-300 transition-all duration-200"
@@ -844,25 +835,38 @@ export default function LandingPage() {
          ========================================================================= */}
       <section
         id="services"
-        className="relative min-h-screen w-full flex flex-col items-center justify-center px-6 sm:px-12 lg:px-16 py-20 lg:py-28 bg-white border-t border-zinc-100 scroll-mt-20"
+        className="relative min-h-screen w-full flex flex-col items-center justify-center px-6 sm:px-12 lg:px-16 py-20 lg:py-28 bg-white border-t border-zinc-100 scroll-mt-20 overflow-hidden"
       >
         <div id="about" className="scroll-mt-24" />
         <div className="w-full max-w-[1400px] mx-auto flex flex-col items-center">
-          {/* Header */}
-          <div className="flex flex-col items-center text-center max-w-2xl mb-12">
-            <span className="text-[11px] sm:text-[12px] font-bold tracking-[0.24em] text-zinc-400 uppercase font-sans mb-3">
-              One Unified Platform
-            </span>
+          {/* Header with Smooth Scroll Reveal */}
+          <motion.div
+            initial={{ opacity: 0, y: 85 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.2 }}
+            transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+            className="flex flex-col items-center text-center max-w-2xl mb-12"
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 text-zinc-700 text-[11px] sm:text-[12px] font-bold tracking-[0.2em] uppercase font-sans mb-3 border border-zinc-200/80">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#1758A5] animate-pulse" />
+              <span>One Unified Platform</span>
+            </div>
             <h2 className="text-[40px] sm:text-[54px] lg:text-[62px] font-black tracking-[-0.035em] text-zinc-950 leading-[1.08]">
               How Zenith Works
             </h2>
             <p className="mt-4 text-[15px] sm:text-[16.5px] lg:text-[17px] leading-[1.65] text-zinc-600 font-normal">
               Toggle between services below to see transparent rates, verified routes, and pickup details across Daman and Vapi.
             </p>
-          </div>
+          </motion.div>
 
           {/* Service Mode Tabs (Cabs / Self-Drive / Station) */}
-          <div className="flex items-center gap-2 sm:gap-3 p-1.5 rounded-2xl bg-zinc-100 border border-zinc-200/80 mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: 70 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.2 }}
+            transition={{ duration: 0.65, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            className="flex items-center gap-2 sm:gap-3 p-1.5 rounded-2xl bg-zinc-100 border border-zinc-200/80 mb-12"
+          >
             {[
               { id: "cabs" as const, label: "Cab Hailing", icon: Car },
               { id: "self-drive" as const, label: "Self-Drive Rental", icon: Key },
@@ -871,9 +875,11 @@ export default function LandingPage() {
               const isSelected = activeServiceMode === tab.id;
               const IconComp = tab.icon;
               return (
-                <button
+                <motion.button
                   key={tab.id}
                   onClick={() => setActiveServiceMode(tab.id)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   className={`relative flex items-center gap-2 py-2.5 px-5 sm:px-7 rounded-xl text-[13.5px] sm:text-[14.5px] font-semibold transition-colors duration-200 focus:outline-none ${isSelected ? "text-zinc-950" : "text-zinc-500 hover:text-zinc-800"
                     }`}
                 >
@@ -888,25 +894,26 @@ export default function LandingPage() {
                     <IconComp className={`w-4 h-4 ${isSelected ? "text-[#1758A5]" : "text-zinc-400"}`} />
                     <span>{tab.label}</span>
                   </span>
-                </button>
+                </motion.button>
               );
             })}
-          </div>
+          </motion.div>
 
           {/* Dynamic Service Presentation Card */}
           <AnimatePresence mode="wait">
             <motion.div
               key={activeServiceMode}
-              initial={{ opacity: 0, y: 60 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -60 }}
-              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              initial={{ opacity: 0, y: 90, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -50, scale: 0.96 }}
+              transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
               className="w-full max-w-[1240px] rounded-3xl bg-[#f8f8fa] border border-zinc-200/80 p-8 sm:p-12 lg:p-16 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center shadow-xs"
             >
               {activeServiceMode === "cabs" && (
                 <>
                   <div className="lg:col-span-6 flex flex-col justify-center">
-                    <span className="text-xs font-bold uppercase tracking-widest text-[#1758A5] mb-2">
+                    <span className="text-xs font-bold uppercase tracking-widest text-[#1758A5] mb-2 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#1758A5] animate-pulse" />
                       Point-to-Point Mobility
                     </span>
                     <h3 className="text-3xl sm:text-4xl font-black text-zinc-950 tracking-tight mb-4">
@@ -915,49 +922,75 @@ export default function LandingPage() {
                     <p className="text-[15.5px] text-zinc-600 leading-relaxed mb-6">
                       Never deal with meter-less street auto haggling again. Tap to request a clean, air-conditioned cab anywhere in Daman, Nani Daman, or Moti Daman. An assigned driver arrives in minutes at transparent, metered rates.
                     </p>
-                    <div className="grid grid-cols-2 gap-4 text-sm text-zinc-700 mb-8">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                        <span>Average 3-min ETA</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                        <span>Starting at ₹14/km</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                        <span>100% Chilled AC Fleet</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                        <span>Zero Tourist Surcharges</span>
-                      </div>
+                    <div className="grid grid-cols-2 gap-3.5 text-sm text-zinc-700 mb-8">
+                      {[
+                        "Average 3-min ETA",
+                        "Starting at ₹14/km",
+                        "100% Chilled AC Fleet",
+                        "Zero Tourist Surcharges",
+                      ].map((item, idx) => (
+                        <motion.div
+                          key={idx}
+                          whileHover={{ scale: 1.02, x: 2 }}
+                          className="flex items-center gap-2 p-2 rounded-xl bg-white/70 border border-zinc-200/60 shadow-2xs transition-colors"
+                        >
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                          <span className="font-medium text-zinc-800 text-xs sm:text-sm">{item}</span>
+                        </motion.div>
+                      ))}
                     </div>
                     <div>
-                      <a
+                      <motion.a
+                        whileHover={{ scale: 1.03, y: -2 }}
+                        whileTap={{ scale: 0.97 }}
                         href={`tel:${ZENITH_COMPANY_INFO.phoneRaw}`}
-                        className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-black text-white text-sm font-semibold hover:bg-zinc-800 transition-colors shadow-xs"
+                        className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-[#1758A5] text-white text-sm font-semibold hover:bg-[#103866] transition-all shadow-xs hover:shadow-md"
                       >
-                        <Phone className="w-4 h-4 text-[#1758A5]" />
+                        <Phone className="w-4 h-4 text-white" />
                         <span>Book Instant Cab ({ZENITH_COMPANY_INFO.phone})</span>
-                      </a>
+                      </motion.a>
                     </div>
                   </div>
-                  <div className="lg:col-span-6 relative aspect-[16/10] rounded-2xl overflow-hidden bg-white border border-zinc-200/80 shadow-sm flex items-center justify-center p-4">
-                    <Image
-                      src="/cars/swift.jpg"
-                      alt="Zenith Maruti Swift Cab Hailing in Daman"
-                      fill
-                      className="object-contain p-4"
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.90, y: 90 }}
+                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                    viewport={{ once: false, amount: 0.15 }}
+                    transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                    className="lg:col-span-6 relative aspect-[16/10] rounded-3xl overflow-hidden bg-gradient-to-b from-white to-zinc-50 border border-zinc-200/80 shadow-sm flex items-center justify-center p-4 group"
+                  >
+                    {/* Ambient Glow */}
+                    <motion.div
+                      animate={{ scale: [1, 1.1, 1], opacity: [0.35, 0.6, 0.35] }}
+                      transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                      className="absolute w-56 h-56 rounded-full bg-[#1758A5]/10 blur-2xl pointer-events-none"
                     />
-                  </div>
+                    {/* Floating Car Image */}
+                    <motion.div
+                      animate={{ y: [0, -6, 0] }}
+                      transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                      className="relative w-full h-full"
+                    >
+                      <Image
+                        src="/cars/swift.jpg"
+                        alt="Zenith Maruti Swift Cab Hailing in Daman"
+                        fill
+                        className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </motion.div>
+                    {/* Floating Service Badge */}
+                    <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-zinc-200/80 shadow-xs flex items-center gap-1.5 text-[11px] font-bold text-zinc-800">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>Avg 3-Min Dispatch</span>
+                    </div>
+                  </motion.div>
                 </>
               )}
 
               {activeServiceMode === "self-drive" && (
                 <>
                   <div className="lg:col-span-6 flex flex-col justify-center">
-                    <span className="text-xs font-bold uppercase tracking-widest text-[#1758A5] mb-2">
+                    <span className="text-xs font-bold uppercase tracking-widest text-[#1758A5] mb-2 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#1758A5] animate-pulse" />
                       Total Driving Independence
                     </span>
                     <h3 className="text-3xl sm:text-4xl font-black text-zinc-950 tracking-tight mb-4">
@@ -966,49 +999,75 @@ export default function LandingPage() {
                     <p className="text-[15.5px] text-zinc-600 leading-relaxed mb-6">
                       Freedom to cruise the coast at your own pace. Choose from rugged Mahindra Thar 4x4 convertibles, compact SUVs, and sedans with doorstep delivery to your beach resort or hotel. Digital keyless unlock and zero paperwork hassle.
                     </p>
-                    <div className="grid grid-cols-2 gap-4 text-sm text-zinc-700 mb-8">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                        <span>Doorstep Resort Delivery</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                        <span>Starting at ₹1,199/day</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                        <span>Permits Cleared for Gujarat</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                        <span>Unlimited KM Packages</span>
-                      </div>
+                    <div className="grid grid-cols-2 gap-3.5 text-sm text-zinc-700 mb-8">
+                      {[
+                        "Doorstep Resort Delivery",
+                        "Starting at ₹1,199/day",
+                        "Permits Cleared for Gujarat",
+                        "Unlimited KM Packages",
+                      ].map((item, idx) => (
+                        <motion.div
+                          key={idx}
+                          whileHover={{ scale: 1.02, x: 2 }}
+                          className="flex items-center gap-2 p-2 rounded-xl bg-white/70 border border-zinc-200/60 shadow-2xs transition-colors"
+                        >
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                          <span className="font-medium text-zinc-800 text-xs sm:text-sm">{item}</span>
+                        </motion.div>
+                      ))}
                     </div>
                     <div>
-                      <a
+                      <motion.a
+                        whileHover={{ scale: 1.03, y: -2 }}
+                        whileTap={{ scale: 0.97 }}
                         href={`tel:${ZENITH_COMPANY_INFO.phoneRaw}`}
-                        className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-black text-white text-sm font-semibold hover:bg-zinc-800 transition-colors shadow-xs"
+                        className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-[#1758A5] text-white text-sm font-semibold hover:bg-[#103866] transition-all shadow-xs hover:shadow-md"
                       >
-                        <Key className="w-4 h-4 text-[#1758A5]" />
+                        <Key className="w-4 h-4 text-white" />
                         <span>Rent Self-Drive Car</span>
-                      </a>
+                      </motion.a>
                     </div>
                   </div>
-                  <div className="lg:col-span-6 relative aspect-[16/10] rounded-2xl overflow-hidden bg-white border border-zinc-200/80 shadow-sm flex items-center justify-center p-4">
-                    <Image
-                      src="/cars/thar.jpg"
-                      alt="Mahindra Thar 4x4 Self Drive Rental Daman"
-                      fill
-                      className="object-contain p-4"
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.90, y: 90 }}
+                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                    viewport={{ once: false, amount: 0.15 }}
+                    transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                    className="lg:col-span-6 relative aspect-[16/10] rounded-3xl overflow-hidden bg-gradient-to-b from-white to-zinc-50 border border-zinc-200/80 shadow-sm flex items-center justify-center p-4 group"
+                  >
+                    {/* Ambient Glow */}
+                    <motion.div
+                      animate={{ scale: [1, 1.1, 1], opacity: [0.35, 0.6, 0.35] }}
+                      transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                      className="absolute w-56 h-56 rounded-full bg-amber-500/10 blur-2xl pointer-events-none"
                     />
-                  </div>
+                    {/* Floating Car Image */}
+                    <motion.div
+                      animate={{ y: [0, -6, 0] }}
+                      transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                      className="relative w-full h-full"
+                    >
+                      <Image
+                        src="/cars/thar.jpg"
+                        alt="Mahindra Thar 4x4 Self Drive Rental Daman"
+                        fill
+                        className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </motion.div>
+                    {/* Floating Service Badge */}
+                    <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-zinc-200/80 shadow-xs flex items-center gap-1.5 text-[11px] font-bold text-zinc-800">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                      <span>Doorstep Hotel Drop</span>
+                    </div>
+                  </motion.div>
                 </>
               )}
 
               {activeServiceMode === "station" && (
                 <>
                   <div className="lg:col-span-6 flex flex-col justify-center">
-                    <span className="text-xs font-bold uppercase tracking-widest text-[#1758A5] mb-2">
+                    <span className="text-xs font-bold uppercase tracking-widest text-[#1758A5] mb-2 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#1758A5] animate-pulse" />
                       Reliable Transit Gateway
                     </span>
                     <h3 className="text-3xl sm:text-4xl font-black text-zinc-950 tracking-tight mb-4">
@@ -1025,30 +1084,35 @@ export default function LandingPage() {
                       {DAMAN_ROUTES.map((route) => {
                         const isSelected = selectedRouteId === route.id;
                         return (
-                          <button
+                          <motion.button
                             key={route.id}
                             type="button"
+                            whileHover={{ scale: 1.015, x: 4 }}
+                            whileTap={{ scale: 0.99 }}
                             onClick={() => setSelectedRouteId(route.id)}
                             className={`w-full flex items-center justify-between p-3.5 rounded-xl border text-left text-xs sm:text-sm font-medium transition-all duration-150 ${isSelected
-                              ? "bg-blue-50/60 border-[#1758A5] text-zinc-950 shadow-xs"
+                              ? "bg-blue-50/70 border-[#1758A5] text-zinc-950 shadow-xs"
                               : "bg-white border-zinc-200/80 text-zinc-700 hover:border-zinc-300"
                               }`}
                           >
                             <div className="flex items-center gap-2.5">
-                              <span className={`w-2 h-2 rounded-full ${isSelected ? "bg-[#1758A5]" : "bg-zinc-300"}`} />
+                              <span className={`w-2 h-2 rounded-full ${isSelected ? "bg-[#1758A5] animate-pulse" : "bg-zinc-300"}`} />
                               <span className="font-semibold">{route.from} &rarr; {route.to}</span>
                             </div>
                             <div className="flex items-center gap-2.5">
                               <span className="text-zinc-400 text-xs hidden sm:inline">{route.approxTime}</span>
                               <span className="text-[#1758A5] font-bold">{route.cabEstimate}</span>
                             </div>
-                          </button>
+                          </motion.button>
                         );
                       })}
                     </div>
 
                     {/* Active Route Highlight Info Box */}
-                    <div className="p-3.5 rounded-xl bg-white border border-zinc-200/80 mb-7 flex items-center justify-between text-xs text-zinc-600">
+                    <motion.div
+                      layout
+                      className="p-3.5 rounded-xl bg-white border border-zinc-200/80 mb-7 flex items-center justify-between text-xs text-zinc-600 shadow-2xs"
+                    >
                       <div className="flex items-center gap-2">
                         <Sparkles className="w-3.5 h-3.5 text-[#1758A5] flex-shrink-0" />
                         <span>{activeRoute.highlight}</span>
@@ -1056,36 +1120,69 @@ export default function LandingPage() {
                       <span className="font-semibold text-zinc-800 ml-2 whitespace-nowrap">
                         {activeRoute.distanceKm} km &bull; {activeRoute.approxTime}
                       </span>
-                    </div>
+                    </motion.div>
 
                     <div>
-                      <a
+                      <motion.a
+                        whileHover={{ scale: 1.03, y: -2 }}
+                        whileTap={{ scale: 0.97 }}
                         href={`tel:${ZENITH_COMPANY_INFO.phoneRaw}`}
-                        className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-black text-white text-sm font-semibold hover:bg-zinc-800 transition-colors shadow-xs"
+                        className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-[#1758A5] text-white text-sm font-semibold hover:bg-[#103866] transition-all shadow-xs hover:shadow-md"
                       >
-                        <MapPin className="w-4 h-4 text-[#1758A5]" />
+                        <MapPin className="w-4 h-4 text-white" />
                         <span>Reserve Station Transfer</span>
-                      </a>
+                      </motion.a>
                     </div>
                   </div>
-                  <div className="lg:col-span-6 relative aspect-[16/10] rounded-2xl overflow-hidden bg-white border border-zinc-200/80 shadow-sm flex items-center justify-center p-4">
-                    <Image
-                      src="/cars/dzire.jpg"
-                      alt="Zenith Dzire Station Pickup Vapi to Daman"
-                      fill
-                      className="object-contain p-4"
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.90, y: 90 }}
+                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                    viewport={{ once: false, amount: 0.15 }}
+                    transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                    className="lg:col-span-6 relative aspect-[16/10] rounded-3xl overflow-hidden bg-gradient-to-b from-white to-zinc-50 border border-zinc-200/80 shadow-sm flex items-center justify-center p-4 group"
+                  >
+                    {/* Ambient Glow */}
+                    <motion.div
+                      animate={{ scale: [1, 1.1, 1], opacity: [0.35, 0.6, 0.35] }}
+                      transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                      className="absolute w-56 h-56 rounded-full bg-[#1758A5]/10 blur-2xl pointer-events-none"
                     />
-                  </div>
+                    {/* Floating Car Image */}
+                    <motion.div
+                      animate={{ y: [0, -6, 0] }}
+                      transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                      className="relative w-full h-full"
+                    >
+                      <Image
+                        src="/cars/dzire.jpg"
+                        alt="Zenith Dzire Station Pickup Vapi to Daman"
+                        fill
+                        className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </motion.div>
+                    {/* Floating Service Badge */}
+                    <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-zinc-200/80 shadow-xs flex items-center gap-1.5 text-[11px] font-bold text-zinc-800">
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                      <span>Platform Chauffeur Meet</span>
+                    </div>
+                  </motion.div>
                 </>
               )}
             </motion.div>
           </AnimatePresence>
 
           {/* THE ZENITH STANDARD VS. STREET CABS COMPARISON */}
-          <div className="w-full max-w-[1240px] mt-12 sm:mt-14 rounded-3xl bg-[#f8f8fa] border border-zinc-200/80 p-6 sm:p-10">
+          <motion.div
+            initial={{ opacity: 0, y: 90 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.15 }}
+            transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+            className="w-full max-w-[1240px] mt-12 sm:mt-14 rounded-3xl bg-[#f8f8fa] border border-zinc-200/80 p-6 sm:p-10 shadow-xs"
+          >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-6 border-b border-zinc-200/80">
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#1758A5]">
+                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#1758A5] flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#1758A5] animate-pulse" />
                   The Zenith Standard
                 </span>
                 <h4 className="text-xl sm:text-2xl font-black text-zinc-950 tracking-tight mt-0.5">
@@ -1098,37 +1195,43 @@ export default function LandingPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 text-sm">
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2 font-bold text-zinc-950 mb-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                  <span>Fixed, Upfront Metered Fares</span>
-                </div>
-                <p className="text-zinc-500 text-xs sm:text-[13px] leading-relaxed">
-                  Zenith fares are fixed before you board. Zero unmetered auto haggling, zero unexpected night surcharges, and zero luggage fees.
-                </p>
-              </div>
-
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2 font-bold text-zinc-950 mb-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                  <span>100% Chilled AC &amp; Sanitized Fleet</span>
-                </div>
-                <p className="text-zinc-500 text-xs sm:text-[13px] leading-relaxed">
-                  Escape coastal humidity. Every company-owned vehicle features high-performance AC, fresh interiors, and GPS route safety.
-                </p>
-              </div>
-
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2 font-bold text-zinc-950 mb-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                  <span>24/7 Regional Operations Desk</span>
-                </div>
-                <p className="text-zinc-500 text-xs sm:text-[13px] leading-relaxed">
-                  Backed by Zenith Fleets Pvt. Ltd.&apos;s central regional desk with verified chauffeurs, live telemetry, and instant dispatch.
-                </p>
-              </div>
+              {[
+                {
+                  title: "Fixed, Upfront Metered Fares",
+                  description:
+                    "Zenith fares are fixed before you board. Zero unmetered auto haggling, zero unexpected night surcharges, and zero luggage fees.",
+                },
+                {
+                  title: "100% Chilled AC & Sanitized Fleet",
+                  description:
+                    "Escape coastal humidity. Every company-owned vehicle features high-performance AC, fresh interiors, and GPS route safety.",
+                },
+                {
+                  title: "24/7 Regional Operations Desk",
+                  description:
+                    "Backed by Zenith Fleets Pvt. Ltd.'s central regional desk with verified chauffeurs, live telemetry, and instant dispatch.",
+                },
+              ].map((item, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 70 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: false, amount: 0.15 }}
+                  transition={{ duration: 0.6, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                  whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                  className="group flex flex-col p-5 rounded-2xl bg-white border border-zinc-200/60 shadow-2xs hover:shadow-md hover:border-zinc-300 transition-all duration-200"
+                >
+                  <div className="flex items-center gap-2 font-bold text-zinc-950 mb-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                    <span>{item.title}</span>
+                  </div>
+                  <p className="text-zinc-500 text-xs sm:text-[13px] leading-relaxed">
+                    {item.description}
+                  </p>
+                </motion.div>
+              ))}
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -1142,10 +1245,10 @@ export default function LandingPage() {
         <div className="w-full max-w-[1400px] mx-auto flex flex-col items-center">
           {/* SECTION HEADER */}
           <motion.div
-            initial={{ opacity: 0, y: 25 }}
+            initial={{ opacity: 0, y: 85 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            viewport={{ once: false, amount: 0.2 }}
+            transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col items-center text-center max-w-2xl"
           >
             {/* Eyebrow */}
@@ -1166,8 +1269,14 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-          {/* CATEGORY FILTER TABS */}
-          <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 mt-8 sm:mt-10">
+          {/* CATEGORY FILTER TABS WITH ANIMATED SLIDING PILL */}
+          <motion.div
+            initial={{ opacity: 0, y: 70 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.2 }}
+            transition={{ duration: 0.65, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 mt-8 sm:mt-10"
+          >
             {[
               { id: "all", label: "All Vehicles" },
               { id: "cabs", label: "Cab Hailing" },
@@ -1178,19 +1287,28 @@ export default function LandingPage() {
               const isSelected = activeFleetTab === tab.id;
 
               return (
-                <button
+                <motion.button
                   key={tab.id}
                   onClick={() => setActiveFleetTab(tab.id)}
-                  className={`px-5 sm:px-6 py-2 rounded-xl sm:rounded-2xl text-[13px] sm:text-[14px] font-semibold transition-all duration-200 focus:outline-none ${isSelected
-                    ? "bg-black text-white shadow-sm"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  className={`relative px-5 sm:px-6 py-2 rounded-xl sm:rounded-2xl text-[13px] sm:text-[14px] font-semibold transition-colors duration-200 focus:outline-none ${isSelected
+                    ? "text-white"
                     : "bg-[#f4f4f6] text-zinc-700 hover:bg-zinc-200/80 hover:text-black"
                     }`}
                 >
-                  {tab.label}
-                </button>
+                  {isSelected && (
+                    <motion.div
+                      layoutId="fleetTabActivePill"
+                      className="absolute inset-0 bg-[#1758A5] rounded-xl sm:rounded-2xl shadow-sm z-0"
+                      transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                    />
+                  )}
+                  <span className="relative z-10">{tab.label}</span>
+                </motion.button>
               );
             })}
-          </div>
+          </motion.div>
 
           {/* DYNAMIC FLEET GRID WITH STUDIO-GRADE VEHICLE PHOTOGRAPHY */}
           <motion.div
@@ -1202,13 +1320,14 @@ export default function LandingPage() {
                 <motion.div
                   key={vehicle.id}
                   layout
-                  initial={{ opacity: 0, y: 0 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 90, scale: 0.94 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
                   viewport={{ once: false, amount: 0.15 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.5, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
+                  exit={{ opacity: 0, scale: 0.94 }}
+                  whileHover={{ y: -8, transition: { duration: 0.25 } }}
+                  transition={{ duration: 0.7, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
                   onClick={() => setSelectedVehicle(vehicle)}
-                  className="group relative rounded-3xl bg-white border border-zinc-200/80 p-6 flex flex-col justify-between hover:border-zinc-300 hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer"
+                  className="group relative rounded-3xl bg-white border border-zinc-200/80 p-6 flex flex-col justify-between hover:border-zinc-300 hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer"
                 >
                   <div>
                     {/* Top Metadata */}
@@ -1259,17 +1378,19 @@ export default function LandingPage() {
                       )}
                     </div>
 
-                    <button
+                    <motion.button
                       type="button"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedVehicle(vehicle);
                       }}
-                      className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-black text-white text-[13px] font-semibold hover:bg-zinc-800 transition-colors shadow-xs active:scale-95"
+                      className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#1758A5] text-white text-[13px] font-semibold hover:bg-[#103866] transition-colors shadow-xs"
                     >
                       <span>View Specs</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    </motion.button>
                   </div>
                 </motion.div>
               ))}
@@ -1277,15 +1398,23 @@ export default function LandingPage() {
           </motion.div>
 
           {/* BOTTOM CTA: CALL FLEET DESK */}
-          <div className="mt-14 sm:mt-16 flex items-center justify-center">
-            <a
+          <motion.div
+            initial={{ opacity: 0, y: 70 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.15 }}
+            transition={{ duration: 0.7, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-14 sm:mt-16 flex items-center justify-center"
+          >
+            <motion.a
+              whileHover={{ scale: 1.03, y: -2 }}
+              whileTap={{ scale: 0.97 }}
               href={`tel:${ZENITH_COMPANY_INFO.phoneRaw}`}
-              className="group inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-white border border-zinc-200/90 text-zinc-900 text-[14px] font-semibold hover:border-zinc-300 hover:bg-zinc-50 transition-all duration-200 shadow-xs hover:shadow active:scale-95"
+              className="group inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-[#1758A5] text-white text-[14px] font-semibold hover:bg-[#103866] transition-all duration-200 shadow-md hover:shadow-lg"
             >
               <span>Call Fleet Desk: {ZENITH_COMPANY_INFO.phone}</span>
-              <ArrowRight className="w-4 h-4 text-zinc-600 group-hover:text-black group-hover:translate-x-0.5 transition-all" />
-            </a>
-          </div>
+              <ArrowRight className="w-4 h-4 text-white group-hover:translate-x-1 transition-all" />
+            </motion.a>
+          </motion.div>
         </div>
       </section>
 
@@ -1300,17 +1429,21 @@ export default function LandingPage() {
           {/* LEFT COLUMN: DUAL 3D PHONES SHOWCASE */}
           <div className="lg:col-span-6 xl:col-span-7 relative w-full flex items-center justify-center lg:justify-start min-h-[460px] sm:min-h-[580px] lg:min-h-[640px]">
             {/* Ambient Background Glow */}
-            <div className="absolute w-[360px] sm:w-[500px] h-[360px] sm:h-[500px] bg-gradient-to-tr from-[#1758A5]/10 via-zinc-100/40 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
+            <motion.div
+              animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }}
+              transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+              className="absolute w-[360px] sm:w-[500px] h-[360px] sm:h-[500px] bg-gradient-to-tr from-[#1758A5]/15 via-blue-100/30 to-transparent rounded-full blur-3xl pointer-events-none -z-10"
+            />
 
             <div className="relative w-full max-w-[500px] sm:max-w-[580px] lg:max-w-[620px] h-[480px] sm:h-[580px] lg:h-[620px] flex items-center justify-center">
-              {/* BACK PHONE: phone2.png — enters from left (-120), meets in center, exits to left (-130) */}
+              {/* BACK PHONE: phone2.png — enters from bottom (+440px), settles in center, exits to top (-260px) */}
               <ScrollPhone
-                entryX={-120}
-                entryY={75}
+                entryX={-40}
+                entryY={440}
                 entryRotate={-7}
-                exitX={-130}
-                exitY={-110}
-                exitRotate={-6}
+                exitX={-50}
+                exitY={-260}
+                exitRotate={-4}
                 delay={0}
                 className="absolute left-[0%] sm:left-[3%] lg:left-[0%] top-[10%] sm:top-[8%] w-[230px] sm:w-[290px] lg:w-[330px] z-10"
               >
@@ -1325,15 +1458,15 @@ export default function LandingPage() {
                 </div>
               </ScrollPhone>
 
-              {/* FRONT PHONE: phone1.png — enters from right (+120), meets in center, exits to right (+130) */}
+              {/* FRONT PHONE: phone1.png — enters from bottom (+500px), settles in center, exits to top (-240px) */}
               <ScrollPhone
-                entryX={120}
-                entryY={85}
+                entryX={40}
+                entryY={500}
                 entryRotate={7}
-                exitX={130}
-                exitY={-100}
-                exitRotate={6}
-                delay={0.04}
+                exitX={50}
+                exitY={-240}
+                exitRotate={4}
+                delay={0.05}
                 className="absolute right-[0%] sm:right-[5%] lg:right-[26%] top-[0%] sm:top-[2%] w-[240px] sm:w-[300px] lg:w-[340px] z-25"
               >
                 <div className="relative w-full aspect-[1/1.5] drop-shadow-[25px_30px_45px_rgba(0,0,0,0.22)]">
@@ -1346,22 +1479,45 @@ export default function LandingPage() {
                   />
                 </div>
               </ScrollPhone>
+
+              {/* Floating Interactive Glassmorphic Badges */}
+              <motion.div
+                animate={{ y: [0, -8, 0] }}
+                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                className="absolute -top-3 sm:top-2 -right-2 sm:right-4 z-30 px-3.5 py-2 rounded-2xl bg-white/95 backdrop-blur-xl border border-zinc-200/80 shadow-lg flex items-center gap-2 text-xs font-bold text-zinc-900 pointer-events-none"
+              >
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="hidden sm:inline">Live GPS Telemetry &bull; Active</span>
+                <span className="sm:hidden">GPS Active</span>
+              </motion.div>
+
+              <motion.div
+                animate={{ y: [0, 8, 0] }}
+                transition={{ repeat: Infinity, duration: 4.5, delay: 0.5, ease: "easeInOut" }}
+                className="absolute -bottom-4 sm:bottom-4 -left-2 sm:left-4 z-30 px-3.5 py-2 rounded-2xl bg-white/95 backdrop-blur-xl border border-zinc-200/80 shadow-lg flex items-center gap-2 text-xs font-bold text-zinc-900 pointer-events-none"
+              >
+                <div className="w-5 h-5 rounded-full bg-blue-50 text-[#1758A5] flex items-center justify-center text-[10px] font-bold">
+                  ⚡
+                </div>
+                <span>3-Min Pickup in Daman</span>
+              </motion.div>
             </div>
           </div>
 
           {/* RIGHT COLUMN: MODERN APP CONTENT & CTA */}
           <div className="lg:col-span-6 xl:col-span-5 z-20 flex flex-col justify-center text-left">
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 90 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
+              viewport={{ once: false, amount: 0.2 }}
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="text-[11.5px] sm:text-[12.5px] font-bold tracking-[0.22em] text-zinc-400 uppercase font-sans">
-                Convenient Interaction
-              </span>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 text-zinc-700 text-[11px] sm:text-[12px] font-bold tracking-[0.22em] uppercase font-sans mb-3 border border-zinc-200/80">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#1758A5] animate-pulse" />
+                <span>Convenient Interaction</span>
+              </div>
 
-              <h2 className="text-[42px] sm:text-[54px] lg:text-[60px] xl:text-[68px] font-black tracking-[-0.035em] text-zinc-950 mt-2 sm:mt-3 leading-[1.08]">
+              <h2 className="text-[42px] sm:text-[54px] lg:text-[60px] xl:text-[68px] font-black tracking-[-0.035em] text-zinc-950 mt-1 leading-[1.08]">
                 Modern App
               </h2>
 
@@ -1370,13 +1526,15 @@ export default function LandingPage() {
               </p>
 
               <div className="mt-8 sm:mt-10 flex items-center">
-                <a
+                <motion.a
+                  whileHover={{ scale: 1.04, y: -2 }}
+                  whileTap={{ scale: 0.96 }}
                   href="#app"
-                  className="group inline-flex items-center gap-2.5 px-7 py-3 rounded-full bg-black text-white text-[14px] font-semibold hover:bg-zinc-800 transition-all duration-200 shadow-md hover:shadow-lg active:scale-95"
+                  className="group inline-flex items-center gap-2.5 px-7 py-3 rounded-full bg-[#1758A5] text-white text-[14px] font-semibold hover:bg-[#103866] transition-all duration-200 shadow-md hover:shadow-xl"
                 >
-                  <img src="/apple-logo-white.svg" width={20} height={20} alt="" />
+                  <img src="/apple-logo-white.svg" width={20} height={20} alt="" className="group-hover:scale-110 transition-transform" />
                   <span>Download App</span>
-                </a>
+                </motion.a>
               </div>
             </motion.div>
           </div>
@@ -1393,10 +1551,10 @@ export default function LandingPage() {
         <div className="w-full max-w-[1400px] mx-auto flex flex-col items-start">
           {/* SECTION HEADER */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 85 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: false, amount: 0.2 }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col items-start text-left max-w-2xl"
           >
             <span className="text-[11px] sm:text-[12px] font-bold tracking-[0.24em] text-zinc-400 uppercase font-sans mb-3">
@@ -1460,15 +1618,15 @@ export default function LandingPage() {
                 <ScrollFeatureCard
                   key={feature.id}
                   index={index}
-                  className="group relative bg-white rounded-3xl sm:rounded-[32px] border border-zinc-200/80 p-7 sm:p-8 lg:p-8 flex flex-col justify-between min-h-[280px] sm:min-h-[300px] lg:min-h-[320px] shadow-[0_4px_25px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.07)] transition-shadow duration-300"
+                  className="group relative bg-white rounded-3xl sm:rounded-[32px] border border-zinc-200/80 p-7 sm:p-8 lg:p-8 flex flex-col justify-between min-h-[280px] sm:min-h-[300px] lg:min-h-[320px] shadow-[0_4px_25px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.07)] transition-all duration-300"
                 >
                   <div className="flex items-start justify-between">
                     <div
-                      className={`w-13 h-13 sm:w-14 sm:h-14 rounded-2xl border flex items-center justify-center transition-transform group-hover:scale-105 duration-200 ${feature.iconBg}`}
+                      className={`w-13 h-13 sm:w-14 sm:h-14 rounded-2xl border flex items-center justify-center transition-transform group-hover:scale-110 group-hover:rotate-3 duration-200 ${feature.iconBg}`}
                     >
                       <IconComponent className="w-6 h-6 sm:w-7 sm:h-7" />
                     </div>
-                    <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider bg-zinc-50 border border-zinc-200/60 px-2.5 py-1 rounded-full">
+                    <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider bg-zinc-50 border border-zinc-200/60 px-2.5 py-1 rounded-full group-hover:border-zinc-300 transition-colors">
                       {feature.badge}
                     </span>
                   </div>
@@ -1493,22 +1651,33 @@ export default function LandingPage() {
          ========================================================================= */}
       <section className="relative w-full py-16 sm:py-20 px-6 sm:px-12 lg:px-16 bg-[#fdfdfd] border-t border-zinc-100">
         <div className="max-w-[920px] mx-auto">
-          <div className="text-center mb-10">
+          <motion.div
+            initial={{ opacity: 0, y: 85 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.2 }}
+            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+            className="text-center mb-10"
+          >
             <span className="text-[11px] font-bold tracking-[0.24em] text-zinc-400 uppercase font-sans mb-2 block">
               Clear & Transparent
             </span>
             <h2 className="text-3xl sm:text-4xl font-black text-zinc-950 tracking-tight">
               Frequently Asked Questions
             </h2>
-          </div>
+          </motion.div>
 
           <div className="space-y-3">
             {FAQ_ITEMS.map((faq, index) => {
               const isOpen = expandedFaqIndex === index;
               return (
-                <div
+                <motion.div
                   key={index}
-                  className="rounded-2xl border border-zinc-200/80 bg-white overflow-hidden"
+                  initial={{ opacity: 0, y: 65 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: false, amount: 0.1 }}
+                  transition={{ duration: 0.45, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
+                  className={`rounded-2xl border transition-all duration-200 bg-white overflow-hidden ${isOpen ? "border-[#1758A5]/40 shadow-xs" : "border-zinc-200/80 hover:border-zinc-300"
+                    }`}
                 >
                   <button
                     onClick={() => setExpandedFaqIndex(isOpen ? null : index)}
@@ -1530,7 +1699,7 @@ export default function LandingPage() {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
+                        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                       >
                         <div className="px-6 pb-5 pt-1 text-[14px] text-zinc-600 leading-relaxed border-t border-zinc-100">
                           {faq.answer}
@@ -1538,7 +1707,7 @@ export default function LandingPage() {
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </div>
+                </motion.div>
               );
             })}
           </div>
@@ -1555,14 +1724,18 @@ export default function LandingPage() {
         <div className="w-full max-w-[1400px] mx-auto flex flex-col items-center">
           {/* SIGNBOARD GRADIENT LUXURY CTA BANNER CARD */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
+            initial={{ opacity: 0, y: 95, scale: 0.94 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: false, amount: 0.15 }}
             transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-full rounded-[36px] sm:rounded-[44px] bg-gradient-to-br from-[#0c284a] via-[#103866] to-[#1758a5] p-10 sm:p-16 lg:p-20 text-center overflow-hidden shadow-[0_25px_60px_rgba(12,40,74,0.22)] border border-[#1758a5]/30"
+            className="relative w-full rounded-[36px] sm:rounded-[44px] bg-gradient-to-br from-[#0c284a] via-[#103866] to-[#1758a5] p-10 sm:p-16 lg:p-20 text-center overflow-hidden shadow-[0_25px_60px_rgba(12,40,74,0.22)] border border-[#1758a5]/30 group"
           >
             {/* Subtle Lighting Rings */}
-            <div className="absolute inset-0 pointer-events-none opacity-35 select-none">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 60, ease: "linear" }}
+              className="absolute inset-0 pointer-events-none opacity-35 select-none"
+            >
               <svg
                 viewBox="0 0 1000 400"
                 fill="none"
@@ -1574,9 +1747,19 @@ export default function LandingPage() {
                 <circle cx="700" cy="140" r="5" fill="rgba(255, 255, 255, 0.35)" />
                 <circle cx="940" cy="290" r="4" fill="rgba(255, 255, 255, 0.3)" />
               </svg>
-            </div>
+            </motion.div>
 
             <div className="relative z-10 flex flex-col items-center max-w-2xl mx-auto">
+              <motion.span
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/10 text-blue-200 border border-white/20 text-xs font-semibold uppercase tracking-wider mb-4"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Join Daman&apos;s Fastest Growing Mobility Fleet</span>
+              </motion.span>
+
               <h2 className="text-[34px] sm:text-[46px] lg:text-[52px] font-extrabold tracking-[-0.03em] text-white leading-[1.12]">
                 Drive with Zenith Today
               </h2>
@@ -1587,21 +1770,25 @@ export default function LandingPage() {
               </p>
 
               <div className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-4">
-                <a
+                <motion.a
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
                   href="#app"
-                  className="group inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-white text-black text-[14px] font-semibold hover:bg-zinc-100 hover:shadow-lg transition-all duration-200 shadow-md active:scale-95"
+                  className="group inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-[#1758A5] text-white text-[14px] font-semibold hover:bg-[#103866] border border-white/30 hover:shadow-xl transition-all duration-200 shadow-md"
                 >
-                  <img src="/apple-logo-black.svg" width={20} height={20} alt="" />
+                  <img src="/apple-logo-white.svg" width={20} height={20} alt="" className="group-hover:scale-110 transition-transform" />
                   <span>Download App</span>
-                </a>
+                </motion.a>
 
-                <a
+                <motion.a
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
                   href={`tel:${ZENITH_COMPANY_INFO.phoneRaw}`}
-                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-white/10 backdrop-blur-md text-white text-[14px] font-semibold border border-white/20 hover:bg-white/20 transition-all duration-200"
+                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-[#103866] backdrop-blur-md text-white text-[14px] font-semibold border border-white/20 hover:bg-[#0C284A] transition-all duration-200"
                 >
                   <Phone className="w-4 h-4" />
                   <span>Call {ZENITH_COMPANY_INFO.phone}</span>
-                </a>
+                </motion.a>
               </div>
             </div>
           </motion.div>
@@ -1615,7 +1802,13 @@ export default function LandingPage() {
         <div className="max-w-[1400px] mx-auto px-6 sm:px-12 lg:px-16">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 pb-14 border-b border-zinc-800">
             {/* Column 1: Entity Credentials & Signboard Details */}
-            <div className="flex flex-col">
+            <motion.div
+              initial={{ opacity: 0, y: 80 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false, amount: 0.15 }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              className="flex flex-col"
+            >
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
                   <div className="w-3.5 h-3.5 rounded-full border-[2.5px] border-black border-r-transparent rotate-[-45deg]" />
@@ -1633,10 +1826,15 @@ export default function LandingPage() {
                 <p>GSTIN: <span className="text-zinc-200 font-bold">{ZENITH_COMPANY_INFO.gstin}</span></p>
                 <p className="font-sans text-zinc-400 leading-normal">{ZENITH_COMPANY_INFO.address}</p>
               </div>
-            </div>
+            </motion.div>
 
             {/* Column 2: Mobility Services */}
-            <div>
+            <motion.div
+              initial={{ opacity: 0, y: 80 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false, amount: 0.15 }}
+              transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+            >
               <h4 className="text-[13px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-4">
                 Mobility Services
               </h4>
@@ -1647,10 +1845,15 @@ export default function LandingPage() {
                 <li><a href="#cars" className="hover:text-white transition-colors">Mahindra Thar 4x4 Beach Cruiser</a></li>
                 <li><a href="#services" className="hover:text-white transition-colors">Intercity Transfers (Surat & Mumbai)</a></li>
               </ul>
-            </div>
+            </motion.div>
 
             {/* Column 3: Company & Ecosystem (with Careers redirect) */}
-            <div>
+            <motion.div
+              initial={{ opacity: 0, y: 80 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false, amount: 0.15 }}
+              transition={{ duration: 0.7, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+            >
               <h4 className="text-[13px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-4">
                 Company & Ecosystem
               </h4>
@@ -1684,10 +1887,15 @@ export default function LandingPage() {
                 <li><span className="text-zinc-500">Khelo India Diu Official Partner</span></li>
                 <li><span className="text-zinc-500">G20 Summit Fleet Operations</span></li>
               </ul>
-            </div>
+            </motion.div>
 
             {/* Column 4: 24/7 Operations Desk & Social Links */}
-            <div>
+            <motion.div
+              initial={{ opacity: 0, y: 80 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false, amount: 0.15 }}
+              transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            >
               <h4 className="text-[13px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-4">
                 24/7 Operations Desk
               </h4>
@@ -1725,11 +1933,17 @@ export default function LandingPage() {
                   ))}
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
 
           {/* Sub-Footer Bar */}
-          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
+          <motion.div
+            initial={{ opacity: 0, y: 60 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.15 }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+            className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500"
+          >
             <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
               <p>&copy; {new Date().getFullYear()} {ZENITH_COMPANY_INFO.legalName}. All Rights Reserved.</p>
               <span className="hidden sm:inline text-zinc-700">&bull;</span>
@@ -1761,7 +1975,7 @@ export default function LandingPage() {
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
-          </div>
+          </motion.div>
         </div>
       </footer>
 
@@ -1814,14 +2028,19 @@ export default function LandingPage() {
               </p>
 
               {/* Modal Image */}
-              <div className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden mb-5">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.94 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden mb-5"
+              >
                 <Image
                   src={selectedVehicle.image}
                   alt={selectedVehicle.name}
                   fill
                   className="object-contain p-4"
                 />
-              </div>
+              </motion.div>
 
               {/* Detailed 6-Item Specs Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs text-zinc-700 mb-4">
@@ -1879,9 +2098,9 @@ export default function LandingPage() {
                 <div className="flex items-center gap-3 w-full sm:w-auto">
                   <a
                     href={`tel:${ZENITH_COMPANY_INFO.phoneRaw}`}
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-black text-white text-sm font-semibold hover:bg-zinc-800 transition-colors shadow-xs"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-[#1758A5] text-white text-sm font-semibold hover:bg-[#103866] transition-colors shadow-xs"
                   >
-                    <Phone className="w-4 h-4 text-[#1758A5]" />
+                    <Phone className="w-4 h-4 text-white" />
                     <span>Call to Book</span>
                   </a>
                   <a
@@ -1977,7 +2196,7 @@ export default function LandingPage() {
                 <button
                   type="button"
                   onClick={() => setLegalModal(null)}
-                  className="px-6 py-2.5 rounded-full bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors"
+                  className="px-6 py-2.5 rounded-full bg-[#1758A5] text-white text-xs font-semibold hover:bg-[#103866] transition-colors"
                 >
                   Close
                 </button>
@@ -2011,7 +2230,7 @@ export default function LandingPage() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               onClick={scrollToTop}
-              className="w-10 h-10 rounded-full bg-white border border-zinc-200 text-zinc-700 hover:text-black hover:bg-zinc-50 flex items-center justify-center shadow-md active:scale-95 transition-all"
+              className="w-10 h-10 rounded-full bg-[#1758A5] text-white hover:bg-[#103866] flex items-center justify-center shadow-lg active:scale-95 transition-all"
               aria-label="Scroll to top"
             >
               <ArrowUp className="w-4 h-4" />
