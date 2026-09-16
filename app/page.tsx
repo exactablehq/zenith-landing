@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
 import {
   ArrowRight,
   Menu,
@@ -146,78 +146,175 @@ function ScrollFleetVehicleImage({ src, alt }: { src: string; alt: string }) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   SCROLL-LINKED PHONE (Awwwards-style parallax: Rising up from bottom on scroll)
-   As user scrolls / swipes down into view, the phones emerge smoothly from down
-   (entryY: +380px / +440px) and fade in into place (opacity 0 → 1).
-   As user scrolls past, they exit upward (-240px) and fade out (opacity 1 → 0).
+   APP PHONES SHOWCASE (One-by-One Slide from Bottom Reveal on Every Entry)
+   Every time the user slides/scrolls to Section 4, the phone mockups ascend
+   from below one by one with physics ease ([0.16, 1, 0.3, 1]) and remain
+   rock-solid in place at rest with zero continuous bobbing.
    ───────────────────────────────────────────────────────────────────────────── */
-function ScrollPhone({
+function AppPhonesShowcase() {
+  return (
+    <div className="relative w-full flex items-center justify-center lg:justify-start min-h-[460px] sm:min-h-[580px] lg:min-h-[640px]">
+      {/* Ambient Radial Lighting Glow */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        whileInView={{ opacity: 0.45, scale: 1 }}
+        viewport={{ once: false, amount: 0.2 }}
+        transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute w-[360px] sm:w-[500px] h-[360px] sm:h-[500px] bg-gradient-to-tr from-[#1758A5]/15 via-blue-100/30 to-transparent rounded-full blur-3xl pointer-events-none -z-10"
+      />
+
+      <div className="relative w-full max-w-[500px] sm:max-w-[580px] lg:max-w-[620px] h-[480px] sm:h-[580px] lg:h-[620px] flex items-center justify-center">
+        {/* BACK PHONE (Phone 1 of 2): phone2.png (Navigation Screen) — slides up first */}
+        <motion.div
+          initial={{ opacity: 0, y: 160, scale: 0.92 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          viewport={{ once: false, amount: 0.2 }}
+          transition={{ duration: 0.85, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          style={{ transform: "rotate(-7deg)" }}
+          className="absolute left-[0%] sm:left-[3%] lg:left-[0%] top-[10%] sm:top-[8%] w-[230px] sm:w-[290px] lg:w-[330px] z-10"
+        >
+          <div className="relative w-full aspect-[1/2.05] drop-shadow-[-20px_25px_35px_rgba(0,0,0,0.18)]">
+            <Image
+              src="/phone2.png"
+              alt="Zenith App Route Navigation Screen"
+              fill
+              sizes="(max-width: 768px) 280px, 350px"
+              className="object-contain"
+              priority
+            />
+          </div>
+        </motion.div>
+
+        {/* FRONT PHONE (Phone 2 of 2): phone1.png (Booking Screen) — slides up second (one by one) */}
+        <motion.div
+          initial={{ opacity: 0, y: 220, scale: 0.90 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          viewport={{ once: false, amount: 0.2 }}
+          transition={{ duration: 0.9, delay: 0.38, ease: [0.16, 1, 0.3, 1] }}
+          style={{ transform: "rotate(7deg)" }}
+          className="absolute right-[0%] sm:right-[5%] lg:right-[26%] top-[0%] sm:top-[2%] w-[240px] sm:w-[300px] lg:w-[340px] z-25"
+        >
+          <div className="relative w-full aspect-[1/1.5] drop-shadow-[25px_30px_45px_rgba(0,0,0,0.22)]">
+            <Image
+              src="/phone1.png"
+              alt="Zenith App Fleet Booking Screen"
+              fill
+              sizes="(max-width: 768px) 290px, 360px"
+              className="object-contain"
+              priority
+            />
+          </div>
+        </motion.div>
+
+        {/* Floating Glassmorphic Badge: Live GPS Telemetry */}
+        <motion.div
+          initial={{ opacity: 0, y: 40, scale: 0.85 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          viewport={{ once: false, amount: 0.2 }}
+          transition={{ duration: 0.6, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute -top-3 sm:top-2 -right-2 sm:right-4 z-30 px-3.5 py-2 rounded-2xl bg-white/95 backdrop-blur-xl border border-zinc-200/80 shadow-lg flex items-center gap-2 text-xs font-bold text-zinc-900 pointer-events-none"
+        >
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="hidden sm:inline">Active &bull; Live GPS Telemetry</span>
+          <span className="sm:hidden">GPS Active</span>
+        </motion.div>
+
+        {/* Floating Glassmorphic Badge: 3-Min Pickup */}
+        <motion.div
+          initial={{ opacity: 0, y: 40, scale: 0.85 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          viewport={{ once: false, amount: 0.2 }}
+          transition={{ duration: 0.6, delay: 0.75, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute -bottom-4 sm:bottom-4 -left-2 sm:left-4 z-30 px-3.5 py-2 rounded-2xl bg-white/95 backdrop-blur-xl border border-zinc-200/80 shadow-lg flex items-center gap-2 text-xs font-bold text-zinc-900 pointer-events-none"
+        >
+          <div className="w-5 h-5 rounded-full bg-blue-50 text-[#1758A5] flex items-center justify-center text-[10px] font-bold">
+            ⚡
+          </div>
+          <span>3-Min Pickup in Daman</span>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SCROLL-LINKED HERO SECTION (Starts at opacity 1, fades out as user scrolls past)
+   ───────────────────────────────────────────────────────────────────────────── */
+function ScrollHeroSection({
   children,
   className,
-  entryX = 0,
-  entryY = 420,
-  entryRotate = -5,
-  exitX = 0,
-  exitY = -240,
-  exitRotate = 4,
-  delay = 0,
 }: {
   children: React.ReactNode;
   className?: string;
-  entryX?: number;
-  entryY?: number;
-  entryRotate?: number;
-  exitX?: number;
-  exitY?: number;
-  exitRotate?: number;
-  delay?: number;
 }) {
-  const phoneRef = useRef<HTMLDivElement>(null);
-
+  const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
-    target: phoneRef,
-    offset: ["start end", "end start"],
+    target: heroRef,
+    offset: ["start start", "end start"],
   });
 
-  const p1 = Math.max(0, 0 + delay);
-  const p2 = Math.min(0.36 + delay, 0.48);
-  const p3 = Math.min(0.68 + delay, 0.78);
-  const p4 = Math.min(0.98 + delay, 1.0);
-
-  const y = useTransform(
-    scrollYProgress,
-    [p1, p2, p3, p4],
-    [entryY, 0, 0, exitY]
-  );
-  const x = useTransform(
-    scrollYProgress,
-    [p1, p2, p3, p4],
-    [entryX, 0, 0, exitX]
-  );
-  const rotate = useTransform(
-    scrollYProgress,
-    [p1, p2, p3, p4],
-    [entryRotate, 0, 0, exitRotate]
-  );
-  const opacity = useTransform(
-    scrollYProgress,
-    [p1, p2, p3, p4],
-    [0, 1, 1, 0]
-  );
-  const scale = useTransform(
-    scrollYProgress,
-    [p1, p2, p3, p4],
-    [0.78, 1, 1, 0.84]
-  );
+  const opacity = useTransform(scrollYProgress, [0, 0.65, 0.98], [1, 1, 0]);
+  const y = useTransform(scrollYProgress, [0, 0.65, 0.98], [0, 0, -60]);
+  const scale = useTransform(scrollYProgress, [0, 0.65, 0.98], [1, 1, 0.96]);
 
   return (
-    <motion.div
-      ref={phoneRef}
-      style={{ y, x, rotate, opacity, scale }}
+    <motion.main
+      ref={heroRef}
+      style={{ opacity, y, scale }}
       className={className}
     >
       {children}
-    </motion.div>
+    </motion.main>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SCROLL-LINKED SECTION (Fades in on entry, solid in view, fades out on exit)
+   ───────────────────────────────────────────────────────────────────────────── */
+function ScrollSection({
+  children,
+  className,
+  id,
+  noTransform = false,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  id?: string;
+  noTransform?: boolean;
+}) {
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"],
+  });
+
+  // Fade in on entry (0 -> 0.16), full opacity (0.16 -> 0.84), fade out on exit (0.84 -> 1.0)
+  const opacity = useTransform(
+    scrollYProgress,
+    [0, 0.16, 0.84, 1.0],
+    [0, 1, 1, 0]
+  );
+  const y = useTransform(
+    scrollYProgress,
+    [0, 0.16, 0.84, 1.0],
+    noTransform ? [0, 0, 0, 0] : [45, 0, 0, -45]
+  );
+  const scale = useTransform(
+    scrollYProgress,
+    [0, 0.16, 0.84, 1.0],
+    noTransform ? [1, 1, 1, 1] : [0.97, 1, 1, 0.97]
+  );
+
+  return (
+    <motion.section
+      ref={sectionRef}
+      id={id}
+      style={{ opacity, y, scale }}
+      className={className}
+    >
+      {children}
+    </motion.section>
   );
 }
 
@@ -567,41 +664,61 @@ export default function LandingPage() {
       {/* =========================================================================
           PAGE 1: HERO SECTION (WITH DYNAMIC INTERACTIVE SERVICE TABS)
          ========================================================================= */}
-      <main className="relative min-h-screen lg:h-screen lg:max-h-screen w-full flex flex-col justify-between overflow-x-hidden lg:overflow-hidden pt-20 sm:pt-24 lg:pt-16">
+      <ScrollHeroSection className="relative min-h-screen lg:h-screen lg:max-h-screen w-full flex flex-col justify-between overflow-x-hidden lg:overflow-hidden pt-20 sm:pt-24 lg:pt-16">
         {/* HERO MAIN CONTENT AREA */}
         <section className="relative w-full max-w-[1580px] mx-auto px-6 sm:px-12 lg:px-16 flex-1 flex flex-col justify-center my-auto">
           <div className="grid grid-cols-1 lg:grid-cols-12 items-center min-h-[420px] lg:min-h-[460px]">
-            {/* LEFT COLUMN: DYNAMIC HEADLINE, SUBTITLE & ACTION */}
+            {/* LEFT COLUMN: DYNAMIC HEADLINE, SUBTITLE & ACTION (TEXT LOADS FIRST) */}
             <div className="lg:col-span-5 z-20 flex flex-col justify-center pb-6 lg:pb-0">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentHero.id}
-                  initial={{ opacity: 0, y: 60 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -60 }}
-                  transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
                   className="flex flex-col"
                 >
-                  {/* Floating Highlight Badge */}
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 text-zinc-800 text-[12px] font-semibold border border-zinc-200/80 mb-4 w-fit">
+                  {/* Floating Highlight Badge - Step 1 */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
+                    transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+                    className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 text-zinc-800 text-[12px] font-semibold border border-zinc-200/80 mb-4 w-fit shadow-2xs"
+                  >
                     <span className="w-1.5 h-1.5 rounded-full bg-[#1758A5] animate-pulse" />
                     <span>{currentHero.tag}</span>
                     <span className="text-zinc-400">&bull;</span>
                     <span className="text-[#1758A5] font-bold">{currentHero.priceBadge}</span>
-                  </div>
+                  </motion.div>
 
-                  {/* Main Headline */}
-                  <h1 className="text-[44px] sm:text-[54px] md:text-[64px] lg:text-[58px] xl:text-[72px] font-extrabold tracking-[-0.035em] leading-[1.03] text-black whitespace-pre-line">
+                  {/* Main Headline - Step 2 (Masked Blur Reveal) */}
+                  <motion.h1
+                    initial={{ opacity: 0, y: 35, filter: "blur(8px)" }}
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, y: -25, filter: "blur(6px)" }}
+                    transition={{ duration: 0.72, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
+                    className="text-[44px] sm:text-[54px] md:text-[64px] lg:text-[58px] xl:text-[72px] font-extrabold tracking-[-0.035em] leading-[1.03] text-black whitespace-pre-line"
+                  >
                     {currentHero.headline}
-                  </h1>
+                  </motion.h1>
 
-                  {/* Subtitle Paragraph */}
-                  <p className="mt-5 sm:mt-6 text-zinc-600 text-[15px] sm:text-[16px] lg:text-[15.5px] xl:text-[17px] leading-[1.58] max-w-[420px] font-normal">
+                  {/* Subtitle Paragraph - Step 3 */}
+                  <motion.p
+                    initial={{ opacity: 0, y: 22 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.6, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                    className="mt-5 sm:mt-6 text-zinc-600 text-[15px] sm:text-[16px] lg:text-[15.5px] xl:text-[17px] leading-[1.58] max-w-[420px] font-normal"
+                  >
                     {currentHero.subtitle}
-                  </p>
+                  </motion.p>
 
-                  {/* CTA Action Button */}
-                  <div className="mt-7 flex items-center gap-4">
+                  {/* CTA Action Button - Step 4 */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 16, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.55, delay: 0.38, ease: [0.16, 1, 0.3, 1] }}
+                    className="mt-7 flex items-center gap-4"
+                  >
                     <a
                       href={currentHero.ctaAction}
                       target={currentHero.ctaAction.startsWith("http") ? "_blank" : undefined}
@@ -611,16 +728,21 @@ export default function LandingPage() {
                       <span>{currentHero.ctaText}</span>
                       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                     </a>
-                  </div>
+                  </motion.div>
                 </motion.div>
               </AnimatePresence>
             </div>
 
-            {/* RIGHT COLUMN: DYNAMIC CAR & MAP ROUTE NETWORK (STUCK TO RIGHT EDGE) */}
+            {/* RIGHT COLUMN: DYNAMIC CAR & MAP ROUTE NETWORK (SLIDES IN FROM RIGHT AFTER TEXT) */}
             <div className="lg:col-span-7 relative w-full h-[340px] sm:h-[440px] lg:h-[520px] xl:h-[580px] flex items-end justify-end overflow-visible">
               {/* Map Background Image */}
               <div className="absolute inset-0 z-0 pointer-events-none select-none overflow-hidden flex items-center justify-center">
-                <div className="relative w-full h-full max-w-[900px] max-h-[580px] opacity-30 [mask-image:radial-gradient(ellipse_at_center,black_45%,transparent_85%)]">
+                <motion.div
+                  initial={{ opacity: 0, scale: 1.05 }}
+                  animate={{ opacity: 0.32, scale: 1.1 }}
+                  transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="relative w-full h-full max-w-[900px] max-h-[580px] [mask-image:radial-gradient(ellipse_at_center,black_45%,transparent_85%)]"
+                >
                   <Image
                     src="/map.png"
                     alt="Map Navigation Daman"
@@ -629,38 +751,40 @@ export default function LandingPage() {
                     sizes="(max-width: 1200px) 750px, 1000px"
                     className="object-contain object-center scale-110"
                   />
-                </div>
+                </motion.div>
               </div>
 
               {/* Dynamic Vehicle Cutout - Stuck to Right Edge & Scaled Up */}
               <div className="relative z-10 w-full max-w-[620px] sm:max-w-[780px] lg:max-w-[960px] xl:max-w-[1140px] 2xl:max-w-[1280px] mr-0 sm:-mr-12 lg:-mr-20 xl:-mr-28 2xl:-mr-36 flex flex-col items-end">
-                {/* Floating Live Telemetry Badge (Static solid lock-on, no wiggle) */}
-                <motion.div
-                  key={`telemetry-${currentHero.id}`}
-                  initial={{ opacity: 0, y: 10, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -6, scale: 0.96 }}
-                  transition={{ delay: 0.15, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                  className="hidden sm:flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white/95 backdrop-blur-md border border-zinc-200/90 shadow-[0_8px_25px_rgba(0,0,0,0.06)] absolute top-2 sm:top-4 left-2 sm:left-8 z-20"
-                >
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <div className="flex flex-col text-left">
-                    <span className="text-[9.5px] font-bold uppercase tracking-wider text-zinc-400">Live Fleet Radar</span>
-                    <span className="text-[12px] font-bold text-zinc-900">Active in Daman &bull; 3m ETA</span>
-                  </div>
-                </motion.div>
+                {/* Floating Live Telemetry Badge (Slides & Pops in after car entrance) */}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`telemetry-${currentHero.id}`}
+                    initial={{ opacity: 0, y: 15, scale: 0.92 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.92 }}
+                    transition={{ delay: 0.85, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+                    className="hidden sm:flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white/95 backdrop-blur-md border border-zinc-200/90 shadow-[0_8px_25px_rgba(0,0,0,0.06)] absolute top-2 sm:top-4 left-2 sm:left-8 z-20"
+                  >
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <div className="flex flex-col text-left">
+                      <span className="text-[9.5px] font-bold uppercase tracking-wider text-zinc-400">Live Fleet Radar</span>
+                      <span className="text-[12px] font-bold text-zinc-900">Active in Daman &bull; 3m ETA</span>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
 
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={currentHero.id}
                     className="relative flex flex-col items-end w-full"
                   >
-                    {/* Cinematic Entrance from Right */}
+                    {/* Cinematic Entrance: Car slides in smoothly from the right AFTER text */}
                     <motion.div
-                      initial={{ opacity: 0, x: 120, scale: 0.97 }}
+                      initial={{ opacity: 0, x: 260, scale: 0.94 }}
                       animate={{ opacity: 1, x: 0, scale: 1 }}
-                      exit={{ opacity: 0, x: -120, scale: 0.97 }}
-                      transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+                      exit={{ opacity: 0, x: -160, scale: 0.94 }}
+                      transition={{ duration: 0.85, delay: 0.48, ease: [0.16, 1, 0.3, 1] }}
                       className="relative w-full flex flex-col items-end origin-right-bottom"
                     >
                       <div className="relative w-full aspect-[16/9] sm:aspect-[16/8.5] lg:aspect-[16/8]">
@@ -675,10 +799,16 @@ export default function LandingPage() {
                       </div>
 
                       {/* Synchronized Solid Ground Shadow & Tire Contact */}
-                      <div className="w-full flex flex-col items-end pointer-events-none">
+                      <motion.div
+                        initial={{ opacity: 0, scaleX: 0.6, x: 90 }}
+                        animate={{ opacity: 1, scaleX: 1, x: 0 }}
+                        exit={{ opacity: 0, scaleX: 0.6, x: -60 }}
+                        transition={{ duration: 0.85, delay: 0.52, ease: [0.16, 1, 0.3, 1] }}
+                        className="w-full flex flex-col items-end pointer-events-none"
+                      >
                         <div className="w-[90%] h-6 sm:h-8 lg:h-9 -mt-4 sm:-mt-6 lg:-mt-7 mr-[2%] car-shadow" />
                         <div className="w-[80%] h-4 sm:h-5 lg:h-6 -mt-4 sm:-mt-5 mr-[6%] car-contact-shadow" />
-                      </div>
+                      </motion.div>
                     </motion.div>
                   </motion.div>
                 </AnimatePresence>
@@ -698,13 +828,13 @@ export default function LandingPage() {
                 return (
                   <motion.button
                     key={service.id}
-                    initial={{ opacity: 0, y: 14 }}
+                    initial={{ opacity: 0, y: 16 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: false, amount: 0.2 }}
+                    viewport={{ once: true, amount: 0.2 }}
                     transition={{
                       duration: 0.6,
-                      delay: index * 0.06,
-                      ease: [0.22, 1, 0.36, 1],
+                      delay: index * 0.05 + 0.15,
+                      ease: [0.16, 1, 0.3, 1],
                     }}
                     onClick={() => setActiveHeroTab(service.id)}
                     className={`group relative flex items-center justify-center p-2.5 sm:p-3 transition-colors duration-300 focus:outline-none ${isActive ? "text-zinc-950 font-bold" : "text-zinc-400 hover:text-zinc-700 hover:scale-105 font-medium"
@@ -729,13 +859,13 @@ export default function LandingPage() {
             </div>
 
             <motion.div
-              initial={{ opacity: 0, y: 14, scale: 0.95 }}
+              initial={{ opacity: 0, y: 16, scale: 0.95 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: false, amount: 0.2 }}
+              viewport={{ once: true, amount: 0.2 }}
               transition={{
                 duration: 0.6,
-                delay: heroServices.length * 0.06,
-                ease: [0.22, 1, 0.36, 1],
+                delay: heroServices.length * 0.05 + 0.15,
+                ease: [0.16, 1, 0.3, 1],
               }}
               className="flex-shrink-0 pl-1 sm:pl-2"
             >
@@ -749,12 +879,12 @@ export default function LandingPage() {
             </motion.div>
           </div>
         </footer>
-      </main>
+      </ScrollHeroSection>
 
       {/* =========================================================================
           INSTITUTIONAL CREDENTIALS & TRUST BAR (LUXURY AUTHORITY CARDS)
          ========================================================================= */}
-      <section className="w-full border-y border-zinc-200/80 bg-zinc-50/50 py-6 sm:py-8 px-6 sm:px-12 lg:px-16">
+      <ScrollSection className="w-full border-y border-zinc-200/80 bg-zinc-50/50 py-6 sm:py-8 px-6 sm:px-12 lg:px-16">
         <div className="max-w-[1400px] mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 lg:gap-5">
             {[
@@ -799,17 +929,18 @@ export default function LandingPage() {
               return (
                 <motion.div
                   key={item.id}
-                  initial={{ opacity: 0, y: 70 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: false, amount: 0.15 }}
+                  initial={{ opacity: 0, y: 40, filter: "blur(4px)" }}
+                  whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  whileHover={{ y: -6, scale: 1.015, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
                   transition={{
                     duration: 0.7,
-                    delay: index * 0.08,
-                    ease: [0.22, 1, 0.36, 1],
+                    delay: index * 0.09,
+                    ease: [0.16, 1, 0.3, 1],
                   }}
-                  className="group relative flex items-center gap-4 p-4 sm:p-4.5 rounded-2xl bg-white border border-zinc-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:border-zinc-300 transition-all duration-200"
+                  className="group relative flex items-center gap-4 p-4 sm:p-4.5 rounded-2xl bg-white border border-zinc-200/80 luxury-card-glow hover:border-zinc-300 transition-all duration-300 cursor-default"
                 >
-                  <div className={`w-11 h-11 rounded-xl border flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-200 ${item.iconBg}`}>
+                  <div className={`w-11 h-11 rounded-xl border flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 ${item.iconBg}`}>
                     <IconComp className="w-5 h-5" />
                   </div>
                   <div className="flex flex-col min-w-0">
@@ -828,12 +959,12 @@ export default function LandingPage() {
             })}
           </div>
         </div>
-      </section>
+      </ScrollSection>
 
       {/* =========================================================================
           SECTION 2: DUAL MOBILITY MODES (INTERACTIVE SWITCHER & DETAILS)
          ========================================================================= */}
-      <section
+      <ScrollSection
         id="services"
         className="relative min-h-screen w-full flex flex-col items-center justify-center px-6 sm:px-12 lg:px-16 py-20 lg:py-28 bg-white border-t border-zinc-100 scroll-mt-20 overflow-hidden"
       >
@@ -841,30 +972,48 @@ export default function LandingPage() {
         <div className="w-full max-w-[1400px] mx-auto flex flex-col items-center">
           {/* Header with Smooth Scroll Reveal */}
           <motion.div
-            initial={{ opacity: 0, y: 85 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.2 }}
-            transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, y: 55, filter: "blur(6px)" }}
+            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col items-center text-center max-w-2xl mb-12"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 text-zinc-700 text-[11px] sm:text-[12px] font-bold tracking-[0.2em] uppercase font-sans mb-3 border border-zinc-200/80">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 text-zinc-700 text-[11px] sm:text-[12px] font-bold tracking-[0.2em] uppercase font-sans mb-3 border border-zinc-200/80"
+            >
               <span className="w-1.5 h-1.5 rounded-full bg-[#1758A5] animate-pulse" />
               <span>One Unified Platform</span>
-            </div>
-            <h2 className="text-[40px] sm:text-[54px] lg:text-[62px] font-black tracking-[-0.035em] text-zinc-950 leading-[1.08]">
+            </motion.div>
+            <motion.h2
+              initial={{ opacity: 0, y: 30, filter: "blur(5px)" }}
+              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              className="text-[40px] sm:text-[54px] lg:text-[62px] font-black tracking-[-0.035em] text-zinc-950 leading-[1.08]"
+            >
               How Zenith Works
-            </h2>
-            <p className="mt-4 text-[15px] sm:text-[16.5px] lg:text-[17px] leading-[1.65] text-zinc-600 font-normal">
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.6, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="mt-4 text-[15px] sm:text-[16.5px] lg:text-[17px] leading-[1.65] text-zinc-600 font-normal"
+            >
               Toggle between services below to see transparent rates, verified routes, and pickup details across Daman and Vapi.
-            </p>
+            </motion.p>
           </motion.div>
 
           {/* Service Mode Tabs (Cabs / Self-Drive / Station) */}
           <motion.div
-            initial={{ opacity: 0, y: 70 }}
+            initial={{ opacity: 0, y: 35 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.2 }}
-            transition={{ duration: 0.65, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.65, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="flex items-center gap-2 sm:gap-3 p-1.5 rounded-2xl bg-zinc-100 border border-zinc-200/80 mb-12"
           >
             {[
@@ -903,11 +1052,11 @@ export default function LandingPage() {
           <AnimatePresence mode="wait">
             <motion.div
               key={activeServiceMode}
-              initial={{ opacity: 0, y: 90, scale: 0.96 }}
+              initial={{ opacity: 0, y: 50, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -50, scale: 0.96 }}
-              transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-              className="w-full max-w-[1240px] rounded-3xl bg-[#f8f8fa] border border-zinc-200/80 p-8 sm:p-12 lg:p-16 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center shadow-xs"
+              exit={{ opacity: 0, y: -30, scale: 0.97 }}
+              transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full max-w-[1240px] rounded-3xl bg-[#f8f8fa] border border-zinc-200/80 p-8 sm:p-12 lg:p-16 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center luxury-card-glow"
             >
               {activeServiceMode === "cabs" && (
                 <>
@@ -931,8 +1080,9 @@ export default function LandingPage() {
                       ].map((item, idx) => (
                         <motion.div
                           key={idx}
-                          whileHover={{ scale: 1.02, x: 2 }}
-                          className="flex items-center gap-2 p-2 rounded-xl bg-white/70 border border-zinc-200/60 shadow-2xs transition-colors"
+                          whileHover={{ scale: 1.02, x: 3 }}
+                          transition={{ duration: 0.2 }}
+                          className="flex items-center gap-2 p-2 rounded-xl bg-white/80 border border-zinc-200/70 shadow-2xs hover:border-[#1758A5]/30 transition-all"
                         >
                           <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
                           <span className="font-medium text-zinc-800 text-xs sm:text-sm">{item}</span>
@@ -952,22 +1102,21 @@ export default function LandingPage() {
                     </div>
                   </div>
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.90, y: 90 }}
-                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                    viewport={{ once: false, amount: 0.15 }}
-                    transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                    initial={{ opacity: 0, scale: 0.92, y: 50 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                     className="lg:col-span-6 relative aspect-[16/10] rounded-3xl overflow-hidden bg-gradient-to-b from-white to-zinc-50 border border-zinc-200/80 shadow-sm flex items-center justify-center p-4 group"
                   >
                     {/* Ambient Glow */}
                     <motion.div
-                      animate={{ scale: [1, 1.1, 1], opacity: [0.35, 0.6, 0.35] }}
-                      transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                      className="absolute w-56 h-56 rounded-full bg-[#1758A5]/10 blur-2xl pointer-events-none"
+                      animate={{ scale: [1, 1.15, 1], opacity: [0.35, 0.65, 0.35] }}
+                      transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
+                      className="absolute w-56 h-56 rounded-full bg-[#1758A5]/12 blur-2xl pointer-events-none"
                     />
                     {/* Floating Car Image */}
                     <motion.div
-                      animate={{ y: [0, -6, 0] }}
-                      transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                      animate={{ y: [0, -8, 0] }}
+                      transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
                       className="relative w-full h-full"
                     >
                       <Image
@@ -1008,8 +1157,9 @@ export default function LandingPage() {
                       ].map((item, idx) => (
                         <motion.div
                           key={idx}
-                          whileHover={{ scale: 1.02, x: 2 }}
-                          className="flex items-center gap-2 p-2 rounded-xl bg-white/70 border border-zinc-200/60 shadow-2xs transition-colors"
+                          whileHover={{ scale: 1.02, x: 3 }}
+                          transition={{ duration: 0.2 }}
+                          className="flex items-center gap-2 p-2 rounded-xl bg-white/80 border border-zinc-200/70 shadow-2xs hover:border-[#1758A5]/30 transition-all"
                         >
                           <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
                           <span className="font-medium text-zinc-800 text-xs sm:text-sm">{item}</span>
@@ -1029,22 +1179,21 @@ export default function LandingPage() {
                     </div>
                   </div>
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.90, y: 90 }}
-                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                    viewport={{ once: false, amount: 0.15 }}
-                    transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                    initial={{ opacity: 0, scale: 0.92, y: 50 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                     className="lg:col-span-6 relative aspect-[16/10] rounded-3xl overflow-hidden bg-gradient-to-b from-white to-zinc-50 border border-zinc-200/80 shadow-sm flex items-center justify-center p-4 group"
                   >
                     {/* Ambient Glow */}
                     <motion.div
-                      animate={{ scale: [1, 1.1, 1], opacity: [0.35, 0.6, 0.35] }}
-                      transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                      className="absolute w-56 h-56 rounded-full bg-amber-500/10 blur-2xl pointer-events-none"
+                      animate={{ scale: [1, 1.15, 1], opacity: [0.35, 0.65, 0.35] }}
+                      transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
+                      className="absolute w-56 h-56 rounded-full bg-amber-500/12 blur-2xl pointer-events-none"
                     />
                     {/* Floating Car Image */}
                     <motion.div
-                      animate={{ y: [0, -6, 0] }}
-                      transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                      animate={{ y: [0, -8, 0] }}
+                      transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
                       className="relative w-full h-full"
                     >
                       <Image
@@ -1090,7 +1239,7 @@ export default function LandingPage() {
                             whileHover={{ scale: 1.015, x: 4 }}
                             whileTap={{ scale: 0.99 }}
                             onClick={() => setSelectedRouteId(route.id)}
-                            className={`w-full flex items-center justify-between p-3.5 rounded-xl border text-left text-xs sm:text-sm font-medium transition-all duration-150 ${isSelected
+                            className={`w-full flex items-center justify-between p-3.5 rounded-xl border text-left text-xs sm:text-sm font-medium transition-all duration-200 ${isSelected
                               ? "bg-blue-50/70 border-[#1758A5] text-zinc-950 shadow-xs"
                               : "bg-white border-zinc-200/80 text-zinc-700 hover:border-zinc-300"
                               }`}
@@ -1135,22 +1284,21 @@ export default function LandingPage() {
                     </div>
                   </div>
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.90, y: 90 }}
-                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                    viewport={{ once: false, amount: 0.15 }}
-                    transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                    initial={{ opacity: 0, scale: 0.92, y: 50 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                     className="lg:col-span-6 relative aspect-[16/10] rounded-3xl overflow-hidden bg-gradient-to-b from-white to-zinc-50 border border-zinc-200/80 shadow-sm flex items-center justify-center p-4 group"
                   >
                     {/* Ambient Glow */}
                     <motion.div
-                      animate={{ scale: [1, 1.1, 1], opacity: [0.35, 0.6, 0.35] }}
-                      transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                      className="absolute w-56 h-56 rounded-full bg-[#1758A5]/10 blur-2xl pointer-events-none"
+                      animate={{ scale: [1, 1.15, 1], opacity: [0.35, 0.65, 0.35] }}
+                      transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
+                      className="absolute w-56 h-56 rounded-full bg-[#1758A5]/12 blur-2xl pointer-events-none"
                     />
                     {/* Floating Car Image */}
                     <motion.div
-                      animate={{ y: [0, -6, 0] }}
-                      transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                      animate={{ y: [0, -8, 0] }}
+                      transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
                       className="relative w-full h-full"
                     >
                       <Image
@@ -1173,11 +1321,11 @@ export default function LandingPage() {
 
           {/* THE ZENITH STANDARD VS. STREET CABS COMPARISON */}
           <motion.div
-            initial={{ opacity: 0, y: 90 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.15 }}
-            transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-            className="w-full max-w-[1240px] mt-12 sm:mt-14 rounded-3xl bg-[#f8f8fa] border border-zinc-200/80 p-6 sm:p-10 shadow-xs"
+            initial={{ opacity: 0, y: 55, filter: "blur(4px)" }}
+            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full max-w-[1240px] mt-12 sm:mt-14 rounded-3xl bg-[#f8f8fa] border border-zinc-200/80 p-6 sm:p-10 luxury-card-glow"
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-6 border-b border-zinc-200/80">
               <div>
@@ -1214,12 +1362,12 @@ export default function LandingPage() {
               ].map((item, idx) => (
                 <motion.div
                   key={idx}
-                  initial={{ opacity: 0, y: 70 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: false, amount: 0.15 }}
-                  transition={{ duration: 0.6, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                  whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                  className="group flex flex-col p-5 rounded-2xl bg-white border border-zinc-200/60 shadow-2xs hover:shadow-md hover:border-zinc-300 transition-all duration-200"
+                  initial={{ opacity: 0, y: 40, filter: "blur(4px)" }}
+                  whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  viewport={{ once: true, amount: 0.15 }}
+                  transition={{ duration: 0.65, delay: idx * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                  whileHover={{ y: -6, scale: 1.015, transition: { duration: 0.25 } }}
+                  className="group flex flex-col p-5 rounded-2xl bg-white border border-zinc-200/70 shadow-2xs hover:shadow-md hover:border-[#1758A5]/30 transition-all duration-300 cursor-default"
                 >
                   <div className="flex items-center gap-2 font-bold text-zinc-950 mb-1.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 group-hover:scale-110 transition-transform" />
@@ -1233,48 +1381,66 @@ export default function LandingPage() {
             </div>
           </motion.div>
         </div>
-      </section>
+      </ScrollSection>
 
       {/* =========================================================================
           PAGE 3: OUR VEHICLE FLEET SECTION (DYNAMIC FILTERING WITH REAL IMAGES)
          ========================================================================= */}
-      <section
+      <ScrollSection
         id="cars"
         className="relative min-h-screen w-full flex flex-col items-center justify-center px-6 sm:px-12 lg:px-16 py-20 lg:py-28 bg-[#fdfdfd] scroll-mt-24"
       >
         <div className="w-full max-w-[1400px] mx-auto flex flex-col items-center">
           {/* SECTION HEADER */}
           <motion.div
-            initial={{ opacity: 0, y: 85 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.2 }}
-            transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, y: 55, filter: "blur(6px)" }}
+            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col items-center text-center max-w-2xl"
           >
             {/* Eyebrow */}
-            <span className="text-[11px] sm:text-[12px] font-bold tracking-[0.24em] text-zinc-400 uppercase font-sans mb-3">
+            <motion.span
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+              className="text-[11px] sm:text-[12px] font-bold tracking-[0.24em] text-zinc-400 uppercase font-sans mb-3"
+            >
               Only the Best Cars
-            </span>
+            </motion.span>
 
             {/* Title */}
-            <h2 className="text-[40px] sm:text-[54px] lg:text-[62px] font-black tracking-[-0.035em] text-zinc-950 leading-[1.08]">
+            <motion.h2
+              initial={{ opacity: 0, y: 30, filter: "blur(5px)" }}
+              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              className="text-[40px] sm:text-[54px] lg:text-[62px] font-black tracking-[-0.035em] text-zinc-950 leading-[1.08]"
+            >
               Our Vehicle Fleet
-            </h2>
+            </motion.h2>
 
             {/* Subtitle Description */}
-            <p className="mt-4 sm:mt-5 text-[15px] sm:text-[16.5px] lg:text-[17px] leading-[1.65] text-zinc-600 font-normal">
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.6, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="mt-4 sm:mt-5 text-[15px] sm:text-[16.5px] lg:text-[17px] leading-[1.65] text-zinc-600 font-normal"
+            >
               Every vehicle in our fleet is company-owned, 100% sanitized, and GPS-monitored.
               <br className="hidden sm:inline" />
               Tap any vehicle to view full specifications and instant reservation details.
-            </p>
+            </motion.p>
           </motion.div>
 
           {/* CATEGORY FILTER TABS WITH ANIMATED SLIDING PILL */}
           <motion.div
-            initial={{ opacity: 0, y: 70 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.2 }}
-            transition={{ duration: 0.65, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.65, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 mt-8 sm:mt-10"
           >
             {[
@@ -1320,14 +1486,14 @@ export default function LandingPage() {
                 <motion.div
                   key={vehicle.id}
                   layout
-                  initial={{ opacity: 0, y: 90, scale: 0.94 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                  viewport={{ once: false, amount: 0.15 }}
+                  initial={{ opacity: 0, y: 55, scale: 0.96, filter: "blur(4px)" }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                  viewport={{ once: true, amount: 0.1 }}
                   exit={{ opacity: 0, scale: 0.94 }}
-                  whileHover={{ y: -8, transition: { duration: 0.25 } }}
-                  transition={{ duration: 0.7, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                  whileHover={{ y: -10, scale: 1.015, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
+                  transition={{ duration: 0.65, delay: index * 0.08, ease: [0.16, 1, 0.3, 1] }}
                   onClick={() => setSelectedVehicle(vehicle)}
-                  className="group relative rounded-3xl bg-white border border-zinc-200/80 p-6 flex flex-col justify-between hover:border-zinc-300 hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer"
+                  className="group relative rounded-3xl bg-white border border-zinc-200/80 p-6 flex flex-col justify-between hover:border-zinc-300 luxury-card-glow transition-all duration-300 overflow-hidden cursor-pointer"
                 >
                   <div>
                     {/* Top Metadata */}
@@ -1386,7 +1552,7 @@ export default function LandingPage() {
                         e.stopPropagation();
                         setSelectedVehicle(vehicle);
                       }}
-                      className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#1758A5] text-white text-[13px] font-semibold hover:bg-[#103866] transition-colors shadow-xs"
+                      className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#1758A5] text-white text-[13px] font-semibold hover:bg-[#103866] transition-colors shadow-xs hover:shadow-md"
                     >
                       <span>View Specs</span>
                       <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -1399,10 +1565,10 @@ export default function LandingPage() {
 
           {/* BOTTOM CTA: CALL FLEET DESK */}
           <motion.div
-            initial={{ opacity: 0, y: 70 }}
+            initial={{ opacity: 0, y: 35 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.15 }}
-            transition={{ duration: 0.7, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.7, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
             className="mt-14 sm:mt-16 flex items-center justify-center"
           >
             <motion.a
@@ -1416,116 +1582,63 @@ export default function LandingPage() {
             </motion.a>
           </motion.div>
         </div>
-      </section>
+      </ScrollSection>
 
       {/* =========================================================================
           PAGE 4: MODERN APP SHOWCASE SECTION
          ========================================================================= */}
-      <section
+      <ScrollSection
         id="app"
+        noTransform
         className="relative min-h-screen lg:h-screen w-full flex items-center justify-center px-6 sm:px-12 lg:px-16 py-16 lg:py-0 overflow-hidden bg-[#fdfdfd] scroll-mt-24"
       >
         <div className="relative w-full max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 items-center gap-12 lg:gap-8">
           {/* LEFT COLUMN: DUAL 3D PHONES SHOWCASE */}
-          <div className="lg:col-span-6 xl:col-span-7 relative w-full flex items-center justify-center lg:justify-start min-h-[460px] sm:min-h-[580px] lg:min-h-[640px]">
-            {/* Ambient Background Glow */}
-            <motion.div
-              animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }}
-              transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-              className="absolute w-[360px] sm:w-[500px] h-[360px] sm:h-[500px] bg-gradient-to-tr from-[#1758A5]/15 via-blue-100/30 to-transparent rounded-full blur-3xl pointer-events-none -z-10"
-            />
-
-            <div className="relative w-full max-w-[500px] sm:max-w-[580px] lg:max-w-[620px] h-[480px] sm:h-[580px] lg:h-[620px] flex items-center justify-center">
-              {/* BACK PHONE: phone2.png — enters from bottom (+440px), settles in center, exits to top (-260px) */}
-              <ScrollPhone
-                entryX={-40}
-                entryY={440}
-                entryRotate={-7}
-                exitX={-50}
-                exitY={-260}
-                exitRotate={-4}
-                delay={0}
-                className="absolute left-[0%] sm:left-[3%] lg:left-[0%] top-[10%] sm:top-[8%] w-[230px] sm:w-[290px] lg:w-[330px] z-10"
-              >
-                <div className="relative w-full aspect-[1/2.05] drop-shadow-[-20px_25px_35px_rgba(0,0,0,0.18)]">
-                  <Image
-                    src="/phone2.png"
-                    alt="Zenith App Route Navigation Screen"
-                    fill
-                    sizes="(max-width: 768px) 280px, 350px"
-                    className="object-contain"
-                  />
-                </div>
-              </ScrollPhone>
-
-              {/* FRONT PHONE: phone1.png — enters from bottom (+500px), settles in center, exits to top (-240px) */}
-              <ScrollPhone
-                entryX={40}
-                entryY={500}
-                entryRotate={7}
-                exitX={50}
-                exitY={-240}
-                exitRotate={4}
-                delay={0.05}
-                className="absolute right-[0%] sm:right-[5%] lg:right-[26%] top-[0%] sm:top-[2%] w-[240px] sm:w-[300px] lg:w-[340px] z-25"
-              >
-                <div className="relative w-full aspect-[1/1.5] drop-shadow-[25px_30px_45px_rgba(0,0,0,0.22)]">
-                  <Image
-                    src="/phone1.png"
-                    alt="Zenith App Fleet Booking Screen"
-                    fill
-                    sizes="(max-width: 768px) 290px, 360px"
-                    className="object-contain"
-                  />
-                </div>
-              </ScrollPhone>
-
-              {/* Floating Interactive Glassmorphic Badges */}
-              <motion.div
-                animate={{ y: [0, -8, 0] }}
-                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                className="absolute -top-3 sm:top-2 -right-2 sm:right-4 z-30 px-3.5 py-2 rounded-2xl bg-white/95 backdrop-blur-xl border border-zinc-200/80 shadow-lg flex items-center gap-2 text-xs font-bold text-zinc-900 pointer-events-none"
-              >
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="hidden sm:inline">Live GPS Telemetry &bull; Active</span>
-                <span className="sm:hidden">GPS Active</span>
-              </motion.div>
-
-              <motion.div
-                animate={{ y: [0, 8, 0] }}
-                transition={{ repeat: Infinity, duration: 4.5, delay: 0.5, ease: "easeInOut" }}
-                className="absolute -bottom-4 sm:bottom-4 -left-2 sm:left-4 z-30 px-3.5 py-2 rounded-2xl bg-white/95 backdrop-blur-xl border border-zinc-200/80 shadow-lg flex items-center gap-2 text-xs font-bold text-zinc-900 pointer-events-none"
-              >
-                <div className="w-5 h-5 rounded-full bg-blue-50 text-[#1758A5] flex items-center justify-center text-[10px] font-bold">
-                  ⚡
-                </div>
-                <span>3-Min Pickup in Daman</span>
-              </motion.div>
-            </div>
+          <div className="lg:col-span-6 xl:col-span-7 relative w-full flex items-center justify-center lg:justify-start">
+            <AppPhonesShowcase />
           </div>
 
           {/* RIGHT COLUMN: MODERN APP CONTENT & CTA */}
           <div className="lg:col-span-6 xl:col-span-5 z-20 flex flex-col justify-center text-left">
-            <motion.div
-              initial={{ opacity: 0, y: 90 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.2 }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 text-zinc-700 text-[11px] sm:text-[12px] font-bold tracking-[0.22em] uppercase font-sans mb-3 border border-zinc-200/80">
+            <div className="flex flex-col">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.2 }}
+                transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 text-zinc-700 text-[11px] sm:text-[12px] font-bold tracking-[0.22em] uppercase font-sans mb-3 border border-zinc-200/80 w-fit"
+              >
                 <span className="w-1.5 h-1.5 rounded-full bg-[#1758A5] animate-pulse" />
                 <span>Convenient Interaction</span>
-              </div>
+              </motion.div>
 
-              <h2 className="text-[42px] sm:text-[54px] lg:text-[60px] xl:text-[68px] font-black tracking-[-0.035em] text-zinc-950 mt-1 leading-[1.08]">
+              <motion.h2
+                initial={{ opacity: 0, y: 30, filter: "blur(5px)" }}
+                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                viewport={{ once: false, amount: 0.2 }}
+                transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                className="text-[42px] sm:text-[54px] lg:text-[60px] xl:text-[68px] font-black tracking-[-0.035em] text-zinc-950 mt-1 leading-[1.08]"
+              >
                 Modern App
-              </h2>
+              </motion.h2>
 
-              <p className="mt-5 sm:mt-6 text-[15px] sm:text-[16.5px] lg:text-[17px] leading-[1.65] text-zinc-600 font-normal max-w-[460px]">
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.2 }}
+                transition={{ duration: 0.6, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                className="mt-5 sm:mt-6 text-[15px] sm:text-[16.5px] lg:text-[17px] leading-[1.65] text-zinc-600 font-normal max-w-[460px]"
+              >
                 We developed a simple and functional app to streamline cab hailing and self-drive car rentals across Daman. View the live vehicle telemetry, driver ETA, and transparent fares in one single click.
-              </p>
+              </motion.p>
 
-              <div className="mt-8 sm:mt-10 flex items-center">
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.96 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: false, amount: 0.2 }}
+                transition={{ duration: 0.55, delay: 0.38, ease: [0.16, 1, 0.3, 1] }}
+                className="mt-8 sm:mt-10 flex items-center"
+              >
                 <motion.a
                   whileHover={{ scale: 1.04, y: -2 }}
                   whileTap={{ scale: 0.96 }}
@@ -1535,41 +1648,59 @@ export default function LandingPage() {
                   <img src="/apple-logo-white.svg" width={20} height={20} alt="" className="group-hover:scale-110 transition-transform" />
                   <span>Download App</span>
                 </motion.a>
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
           </div>
         </div>
-      </section>
+      </ScrollSection>
 
       {/* =========================================================================
           PAGE 5: KEY FEATURES SECTION
          ========================================================================= */}
-      <section
+      <ScrollSection
         id="features"
         className="relative min-h-screen w-full flex flex-col justify-center px-6 sm:px-12 lg:px-16 py-20 lg:py-28 bg-[#fdfdfd] scroll-mt-24"
       >
         <div className="w-full max-w-[1400px] mx-auto flex flex-col items-start">
           {/* SECTION HEADER */}
           <motion.div
-            initial={{ opacity: 0, y: 85 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.2 }}
-            transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, y: 55, filter: "blur(6px)" }}
+            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col items-start text-left max-w-2xl"
           >
-            <span className="text-[11px] sm:text-[12px] font-bold tracking-[0.24em] text-zinc-400 uppercase font-sans mb-3">
+            <motion.span
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+              className="text-[11px] sm:text-[12px] font-bold tracking-[0.24em] text-zinc-400 uppercase font-sans mb-3"
+            >
               Taking Care of Every Client
-            </span>
+            </motion.span>
 
-            <h2 className="text-[40px] sm:text-[54px] lg:text-[62px] font-black tracking-[-0.035em] text-zinc-950 leading-[1.08]">
+            <motion.h2
+              initial={{ opacity: 0, y: 30, filter: "blur(5px)" }}
+              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              className="text-[40px] sm:text-[54px] lg:text-[62px] font-black tracking-[-0.035em] text-zinc-950 leading-[1.08]"
+            >
               Key Features
-            </h2>
+            </motion.h2>
 
-            <p className="mt-4 sm:mt-5 text-[15px] sm:text-[16.5px] lg:text-[17px] leading-[1.65] text-zinc-600 font-normal">
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.6, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="mt-4 sm:mt-5 text-[15px] sm:text-[16.5px] lg:text-[17px] leading-[1.65] text-zinc-600 font-normal"
+            >
               We are all about our client&apos;s comfort and safety. That&apos;s
               <br className="hidden sm:inline" />
               why we provide the best service you can imagine.
-            </p>
+            </motion.p>
           </motion.div>
 
           {/* FULL WIDTH LUXURY KEY FEATURE CARDS */}
@@ -1618,7 +1749,7 @@ export default function LandingPage() {
                 <ScrollFeatureCard
                   key={feature.id}
                   index={index}
-                  className="group relative bg-white rounded-3xl sm:rounded-[32px] border border-zinc-200/80 p-7 sm:p-8 lg:p-8 flex flex-col justify-between min-h-[280px] sm:min-h-[300px] lg:min-h-[320px] shadow-[0_4px_25px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.07)] transition-all duration-300"
+                  className="group relative bg-white rounded-3xl sm:rounded-[32px] border border-zinc-200/80 p-7 sm:p-8 lg:p-8 flex flex-col justify-between min-h-[280px] sm:min-h-[300px] lg:min-h-[320px] luxury-card-glow hover:border-zinc-300 transition-all duration-300 cursor-default"
                 >
                   <div className="flex items-start justify-between">
                     <div
@@ -1644,26 +1775,38 @@ export default function LandingPage() {
             })}
           </div>
         </div>
-      </section>
+      </ScrollSection>
 
       {/* =========================================================================
           PAGE 6: FREQUENTLY ASKED QUESTIONS (FAQ ACCORDION)
          ========================================================================= */}
-      <section className="relative w-full py-16 sm:py-20 px-6 sm:px-12 lg:px-16 bg-[#fdfdfd] border-t border-zinc-100">
+      <ScrollSection className="relative w-full py-16 sm:py-20 px-6 sm:px-12 lg:px-16 bg-[#fdfdfd] border-t border-zinc-100">
         <div className="max-w-[920px] mx-auto">
           <motion.div
-            initial={{ opacity: 0, y: 85 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.2 }}
-            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, y: 45, filter: "blur(5px)" }}
+            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
             className="text-center mb-10"
           >
-            <span className="text-[11px] font-bold tracking-[0.24em] text-zinc-400 uppercase font-sans mb-2 block">
+            <motion.span
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+              className="text-[11px] font-bold tracking-[0.24em] text-zinc-400 uppercase font-sans mb-2 block"
+            >
               Clear & Transparent
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-zinc-950 tracking-tight">
+            </motion.span>
+            <motion.h2
+              initial={{ opacity: 0, y: 25, filter: "blur(4px)" }}
+              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.65, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              className="text-3xl sm:text-4xl font-black text-zinc-950 tracking-tight"
+            >
               Frequently Asked Questions
-            </h2>
+            </motion.h2>
           </motion.div>
 
           <div className="space-y-3">
@@ -1672,11 +1815,12 @@ export default function LandingPage() {
               return (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 65 }}
+                  initial={{ opacity: 0, y: 35 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: false, amount: 0.1 }}
-                  transition={{ duration: 0.45, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
-                  className={`rounded-2xl border transition-all duration-200 bg-white overflow-hidden ${isOpen ? "border-[#1758A5]/40 shadow-xs" : "border-zinc-200/80 hover:border-zinc-300"
+                  viewport={{ once: true, amount: 0.1 }}
+                  transition={{ duration: 0.5, delay: 0.2 + index * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                  whileHover={{ scale: 1.008, transition: { duration: 0.2 } }}
+                  className={`rounded-2xl border transition-all duration-300 bg-white overflow-hidden ${isOpen ? "border-[#1758A5]/50 shadow-sm" : "border-zinc-200/80 hover:border-zinc-300 shadow-2xs"
                     }`}
                 >
                   <button
@@ -1688,7 +1832,7 @@ export default function LandingPage() {
                       {faq.question}
                     </span>
                     <ChevronDown
-                      className={`w-4 h-4 text-zinc-400 transition-transform duration-200 flex-shrink-0 ${isOpen ? "rotate-180 text-zinc-900" : ""
+                      className={`w-4 h-4 text-zinc-400 transition-transform duration-300 flex-shrink-0 ${isOpen ? "rotate-180 text-[#1758A5]" : ""
                         }`}
                     />
                   </button>
@@ -1699,7 +1843,7 @@ export default function LandingPage() {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                       >
                         <div className="px-6 pb-5 pt-1 text-[14px] text-zinc-600 leading-relaxed border-t border-zinc-100">
                           {faq.answer}
@@ -1712,21 +1856,21 @@ export default function LandingPage() {
             })}
           </div>
         </div>
-      </section>
+      </ScrollSection>
 
       {/* =========================================================================
           PAGE 7: DRIVE WITH ZENITH TODAY (CTA BANNER)
          ========================================================================= */}
-      <section
+      <ScrollSection
         id="cta"
         className="relative w-full flex flex-col items-center justify-between px-6 sm:px-12 lg:px-16 pt-6 pb-14 bg-[#fdfdfd] scroll-mt-24"
       >
         <div className="w-full max-w-[1400px] mx-auto flex flex-col items-center">
           {/* SIGNBOARD GRADIENT LUXURY CTA BANNER CARD */}
           <motion.div
-            initial={{ opacity: 0, y: 95, scale: 0.94 }}
+            initial={{ opacity: 0, y: 65, scale: 0.95 }}
             whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: false, amount: 0.15 }}
+            viewport={{ once: true, amount: 0.15 }}
             transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
             className="relative w-full rounded-[36px] sm:rounded-[44px] bg-gradient-to-br from-[#0c284a] via-[#103866] to-[#1758a5] p-10 sm:p-16 lg:p-20 text-center overflow-hidden shadow-[0_25px_60px_rgba(12,40,74,0.22)] border border-[#1758a5]/30 group"
           >
@@ -1751,25 +1895,44 @@ export default function LandingPage() {
 
             <div className="relative z-10 flex flex-col items-center max-w-2xl mx-auto">
               <motion.span
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
+                initial={{ opacity: 0, scale: 0.9, y: 15 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
                 className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/10 text-blue-200 border border-white/20 text-xs font-semibold uppercase tracking-wider mb-4"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span>Join Daman&apos;s Fastest Growing Mobility Fleet</span>
               </motion.span>
 
-              <h2 className="text-[34px] sm:text-[46px] lg:text-[52px] font-extrabold tracking-[-0.03em] text-white leading-[1.12]">
+              <motion.h2
+                initial={{ opacity: 0, y: 25, filter: "blur(4px)" }}
+                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                className="text-[34px] sm:text-[46px] lg:text-[52px] font-extrabold tracking-[-0.03em] text-white leading-[1.12]"
+              >
                 Drive with Zenith Today
-              </h2>
+              </motion.h2>
 
-              <p className="mt-4 sm:mt-5 text-[15px] sm:text-[16.5px] lg:text-[17px] text-blue-100/80 leading-relaxed max-w-lg">
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                className="mt-4 sm:mt-5 text-[15px] sm:text-[16.5px] lg:text-[17px] text-blue-100/80 leading-relaxed max-w-lg"
+              >
                 Get the app to explore the world of premium <br className="hidden sm:inline" />
                 mobility in Daman — that&apos;s exciting
-              </p>
+              </motion.p>
 
-              <div className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-4">
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.55, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-4"
+              >
                 <motion.a
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
@@ -1789,11 +1952,11 @@ export default function LandingPage() {
                   <Phone className="w-4 h-4" />
                   <span>Call {ZENITH_COMPANY_INFO.phone}</span>
                 </motion.a>
-              </div>
+              </motion.div>
             </div>
           </motion.div>
         </div>
-      </section>
+      </ScrollSection>
 
       {/* =========================================================================
           WORLD-CLASS 4-COLUMN ENTERPRISE FOOTER
@@ -1803,10 +1966,10 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 pb-14 border-b border-zinc-800">
             {/* Column 1: Entity Credentials & Signboard Details */}
             <motion.div
-              initial={{ opacity: 0, y: 80 }}
+              initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.15 }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               className="flex flex-col"
             >
               <div className="flex items-center gap-3 mb-4">
@@ -1830,10 +1993,10 @@ export default function LandingPage() {
 
             {/* Column 2: Mobility Services */}
             <motion.div
-              initial={{ opacity: 0, y: 80 }}
+              initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.15 }}
-              transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.7, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
             >
               <h4 className="text-[13px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-4">
                 Mobility Services
@@ -1849,10 +2012,10 @@ export default function LandingPage() {
 
             {/* Column 3: Company & Ecosystem (with Careers redirect) */}
             <motion.div
-              initial={{ opacity: 0, y: 80 }}
+              initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.15 }}
-              transition={{ duration: 0.7, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.7, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
             >
               <h4 className="text-[13px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-4">
                 Company & Ecosystem
@@ -1891,10 +2054,10 @@ export default function LandingPage() {
 
             {/* Column 4: 24/7 Operations Desk & Social Links */}
             <motion.div
-              initial={{ opacity: 0, y: 80 }}
+              initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.15 }}
-              transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             >
               <h4 className="text-[13px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-4">
                 24/7 Operations Desk
@@ -1938,9 +2101,9 @@ export default function LandingPage() {
 
           {/* Sub-Footer Bar */}
           <motion.div
-            initial={{ opacity: 0, y: 60 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.15 }}
+            viewport={{ once: true, amount: 0.15 }}
             transition={{ duration: 0.6, delay: 0.25 }}
             className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500"
           >
